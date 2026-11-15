@@ -1,0 +1,17 @@
+[project]
+name = "edu-plan"
+version = "0.1.0"
+description = "MVP interno de plano de aula e caderno de atividades alinhados à BNCC"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.110",
+    "pydantic>=2.6",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27",
+    "python-docx>=1.1",
+    "python-pptx>=0.6.23",
+]
+
+[tool.vercel]
+entrypoint = "app.main:app"

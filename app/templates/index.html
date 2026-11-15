@@ -47,8 +47,14 @@
     </form>
 
     <p class="nota">
+      {% if modo_demo %}
+      No modo demonstração, o download vem em um <strong>ZIP</strong> com o plano
+      <strong>.docx</strong> e o caderno <strong>.pptx</strong>. O histórico fica
+      desativado.
+      {% else %}
       O resultado sai em <strong>.docx</strong> e <strong>.pptx</strong> editáveis.
       O PDF fica para uma etapa futura.
+      {% endif %}
     </p>
   </section>
 
@@ -68,6 +74,7 @@
   </aside>
 </div>
 
+{% if not modo_demo %}
 <section class="secao">
   <div class="secao-topo">
     <h2>Últimas gerações</h2>
@@ -90,4 +97,5 @@
   <p class="vazio">Nenhuma geração ainda. Preencha o formulário acima.</p>
   {% endif %}
 </section>
+{% endif %}
 {% endblock %}

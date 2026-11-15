@@ -22,7 +22,7 @@ imprimir. PDF fica para uma etapa futura.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 python3 scripts/extrair_bncc_ei.py
 python3 scripts/validar_bncc.py
@@ -56,6 +56,23 @@ LLM_MODEL=gemini-2.5-flash
 
 Para forçar o mock: `LLM_PROVIDER=mock`.
 
+`requirements.txt` é o runtime enxuto usado pelo Vercel. O
+`requirements-dev.txt` inclui `pymupdf`, `uvicorn` e `pytest` para uso local.
+
+## Deploy no Vercel (modo demo)
+
+O Vercel não tem disco persistente. Para o teste, o app roda com
+`VERCEL_DEMO=1`: gera os dois arquivos em `/tmp` e devolve um **ZIP**, sem
+histórico.
+
+```bash
+npx vercel login
+npx vercel --prod
+```
+
+Passo a passo em [`docs/vercel.md`](docs/vercel.md). Para o provedor de texto,
+veja [`docs/groq.md`](docs/groq.md).
+
 ## Linha de comando
 
 ```bash
@@ -86,7 +103,10 @@ app/templates/   páginas HTML
 app/static/      style.css
 templates/       README sobre o layout dos documentos
 tests/           testes automatizados
-docs/            estado atual, decisões, dor/validação, escopo e teste
+docs/            estado atual, decisões, escopo, teste, Vercel e Groq
+pyproject.toml   dependências de runtime e entrypoint do Vercel
+vercel.json      configuração do deploy (maxDuration e exclusões)
+.vercelignore    o que não sobe para o Vercel
 storage/         arquivos gerados (não versionar)
 ```
 

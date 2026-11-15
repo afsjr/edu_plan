@@ -1,0 +1,21 @@
+# Conteúdo do cliente
+exemplos base_inicial/
+
+# Desenvolvimento
+tests/
+scripts/
+docs/
+.agents/
+.claude/
+.reversa/
+_reversa_sdd/
+_reversa_forward/
+.git/
+
+# Ambiente e saídas
+.env
+storage/
+seed.html
+.DS_Store
+__pycache__/
+.pytest_cache/

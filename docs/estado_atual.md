@@ -26,21 +26,23 @@ O provedor real de IA ainda **não foi testado** com uma chave de API.
 | `app/render_docx.py` | Plano de aula em `.docx` A4 editável |
 | `app/render_pptx.py` | Caderno de atividades em `.pptx` A4 editável |
 | `app/storage.py` | Histórico em SQLite e arquivos em `storage/` |
-| `app/main.py` | Aplicação FastAPI: gerar, consultar BNCC, histórico, download |
+| `app/main.py` | Aplicação FastAPI: gerar, consultar BNCC, histórico, download e modo demo |
 | `app/templates/` | Páginas HTML server-rendered |
 | `app/static/style.css` | Estilo da aplicação |
+| `pyproject.toml`, `vercel.json`, `.vercelignore` | Configuração de deploy no Vercel |
 | `prompts/system.md` | Prompt de sistema com as regras pedagógicas e de BNCC |
 | `prompts/few_shot.md` | Contrato destilado dos dois modelos de referência |
 | `prompts/schema_pacote.json` | JSON Schema do pacote gerado |
-| `tests/` | 24 testes automatizados |
-| `docs/` | Escopo, roteiro de teste, decisões, estado atual e Cloudflare |
+| `tests/` | 26 testes automatizados |
+| `docs/` | Escopo, teste, decisões, estado atual, Vercel, Groq e Cloudflare |
 
 ## Números atuais
 
 - **Base BNCC:** 93 linhas, todas com `revisado=S`.
   - Grupos: `EI01` 29, `EI02` 32, `EI03` 32.
   - Campos: `EO` 20, `CG` 15, `TS` 9, `EF` 27, `ET` 22.
-- **Testes:** 24 passando (`python3 -m pytest -q`).
+- **Testes:** 26 passando (`python3 -m pytest -q`).
+- **Deploy:** modo demo para Vercel (ZIP, sem histórico) pronto no código.
 - **Plano:** 7 seções, 4 campos de experiência, objetivos Pré I/Pré II.
 - **Caderno:** capa + 5 atividades, cada uma com código BNCC e campo.
 - **Ícones/emoji:** ~80 chaves provisórias em `data/icons/icones.csv`.
@@ -55,7 +57,7 @@ O provedor real de IA ainda **não foi testado** com uma chave de API.
 # ambiente
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # base da BNCC
 python3 scripts/extrair_bncc_ei.py
@@ -113,6 +115,8 @@ As versões acima são um retrato do ambiente, não um lockfile.
 - Nenhuma integração com o "sistema próprio" do cliente.
 - Sem revisão pedagógica, login, pagamento ou multiusuário.
 - Provedor real de IA não exercitado neste ambiente.
+- No Vercel demo, o download é um ZIP e o histórico fica desativado.
+- O plano gratuito do Groq tem TPM de 8K, o que aperta uma geração completa.
 
 ## Riscos abertos
 

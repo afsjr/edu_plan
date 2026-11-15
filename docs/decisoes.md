@@ -45,6 +45,8 @@
 | D-019 | Tema do demo: "Meu nome, minha identidade" | provisória |
 | D-020 | Ícones/emoji antes de imagem generativa | aceita |
 | D-021 | Biblioteca estática agora; runtime depois | provisória |
+| D-022 | Vercel em modo demo one-shot (ZIP, sem histórico) | provisória |
+| D-023 | Groq free para o texto do teste | provisória |
 
 ---
 
@@ -249,6 +251,30 @@
   gargalo.
 - **Status:** provisória.
 
+### D-022 — Vercel em modo demo one-shot
+
+- **Contexto:** o Vercel não tem disco persistente; o teste do cliente não
+  precisa de histórico.
+- **Decisão:** `VERCEL_DEMO=1` gera os dois arquivos em `/tmp`, devolve um ZIP no
+  mesmo POST e desativa histórico, resultado e download.
+- **Consequência:** deploy simples e público; sem histórico e sem links
+  permanentes.
+- **Reabrir se:** o cliente pedir histórico ou links persistentes; aí entra
+  Blob + Postgres.
+- **Status:** provisória.
+
+### D-023 — Groq free para o texto do teste
+
+- **Contexto:** o teste é de baixo volume e o código já impede código de BNCC
+  inventado; o custo precisa ser zero nesta fase.
+- **Decisão:** usar `openai/gpt-oss-120b` no Groq via endpoint compatível com
+  OpenAI, com mock como padrão e chave só no ambiente.
+- **Consequência:** custo zero; TPM de 8K aperta uma geração completa e a
+  qualidade pedagógica ainda precisa ser validada.
+- **Reabrir se:** aparecer `429` com frequência, a qualidade ficar abaixo do
+  aceite ou o volume crescer.
+- **Status:** provisória.
+
 ---
 
 ## Nova decisão (modelo)
@@ -269,3 +295,4 @@
 |---|---|
 | 2026-11-15 | Registro inicial das decisões do MVP. |
 | 2026-11-15 | Ícones/emoji na atividade de ligar e biblioteca estática (D-020, D-021). |
+| 2026-11-15 | Deploy Vercel one-shot e Groq free para o teste (D-022, D-023). |

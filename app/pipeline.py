@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
+import tempfile
+import zipfile
 from datetime import datetime, timezone
+from pathlib import Path
 
 from app import storage
 from app.bncc import BaseBNCC
@@ -38,6 +42,26 @@ def gerar_pacote(
     gerado = cliente.gerar_pacote(requisicao, candidatos, schema)
     permitidos = {habilidade.codigo for habilidade in candidatos}
     return resolver_pacote(gerado, base, permitidos)
+
+
+def gerar_zip(
+    requisicao: RequisicaoGeracao,
+    cliente: LLMClient | None = None,
+) -> bytes:
+    """Gera o pacote e devolve um ZIP em memória, sem tocar no disco persistente."""
+    cliente = cliente or obter_cliente()
+    pacote = gerar_pacote(requisicao, cliente=cliente)
+
+    with tempfile.TemporaryDirectory() as temporario:
+        pasta = Path(temporario)
+        plano = render_plano(pacote.plano, pasta / "plano_aula.docx")
+        caderno = render_caderno(pacote.caderno, pasta / "caderno_atividades.pptx")
+
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as arquivo_zip:
+            arquivo_zip.write(plano, arcname="plano_aula.docx")
+            arquivo_zip.write(caderno, arcname="caderno_atividades.pptx")
+        return buffer.getvalue()
 
 
 def gerar_e_salvar(

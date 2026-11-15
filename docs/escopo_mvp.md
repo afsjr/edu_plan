@@ -26,6 +26,7 @@ já separa dados, contrato, prompts e renderização para evoluir sem reescrever
 - Consulta à BNCC por grupo, campo e palavra-chave.
 - Histórico local das gerações.
 - Modo mock sem custo para demonstração.
+- Deploy no Vercel em modo demo: ZIP com os dois arquivos, sem histórico.
 
 ## Fora do escopo
 
@@ -33,6 +34,7 @@ já separa dados, contrato, prompts e renderização para evoluir sem reescrever
 - Exportação em PDF.
 - Quantidade variável de atividades.
 - Imagens geradas por IA.
+- Histórico persistente no Vercel nesta fase.
 - Login, pagamento, multiusuário e permissões.
 - Coleta de dados de alunos.
 - Treinamento de modelo com os modelos da instituição.

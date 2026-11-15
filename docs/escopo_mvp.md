@@ -22,6 +22,7 @@ já separa dados, contrato, prompts e renderização para evoluir sem reescrever
 - Plano com 7 seções: identificação, campos de experiência, objetivos,
   habilidades da BNCC, recursos, desenvolvimento e brincadeira/atividade para casa.
 - Caderno com capa + 5 atividades, cada uma com código BNCC e campo.
+- Ícones/emoji na atividade de ligar palavra à letra, com biblioteca versionada.
 - Consulta à BNCC por grupo, campo e palavra-chave.
 - Histórico local das gerações.
 - Modo mock sem custo para demonstração.

@@ -43,6 +43,8 @@
 | D-017 | `strict: false` no JSON Schema do provedor | provisória |
 | D-018 | App server-rendered com Jinja2 | provisória |
 | D-019 | Tema do demo: "Meu nome, minha identidade" | provisória |
+| D-020 | Ícones/emoji antes de imagem generativa | aceita |
+| D-021 | Biblioteca estática agora; runtime depois | provisória |
 
 ---
 
@@ -225,6 +227,30 @@
 
 ---
 
+### D-020 — Ícones/emoji antes de imagem generativa
+
+- **Contexto:** o caderno precisa de desenhos na atividade de ligar palavra à
+  letra, mas imagem gerada por IA erra contagem, letras e não é editável.
+- **Decisão:** usar uma biblioteca de ícones/emoji (`data/icons/icones.csv`) e
+  resolver a palavra no renderizador. Imagem gerada por IA fica para depois.
+- **Consequência:** determinístico, barato e editável; menos rico visualmente.
+- **Reabrir se:** o cliente exigir ilustrações que emoji não representa.
+- **Status:** aceita.
+
+### D-021 — Biblioteca estática agora; runtime depois
+
+- **Contexto:** o teste precisa de previsibilidade e custo zero; geração de
+  imagem em runtime adiciona chave, latência, falhas e curadoria.
+- **Decisão:** manter a biblioteca versionada e pré-revisada. Geração em runtime
+  (Cloudflare/Fal/OpenAI) só na fase seguinte.
+- **Consequência:** demo sem dependência de API de imagem; expansão exige
+  curadoria manual.
+- **Reabrir se:** o cliente pedir temas novos com frequência e a curadoria virar
+  gargalo.
+- **Status:** provisória.
+
+---
+
 ## Nova decisão (modelo)
 
 ```markdown
@@ -242,3 +268,4 @@
 | Data | Mudança |
 |---|---|
 | 2026-11-15 | Registro inicial das decisões do MVP. |
+| 2026-11-15 | Ícones/emoji na atividade de ligar e biblioteca estática (D-020, D-021). |

@@ -17,6 +17,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Cm, Pt
 
 from app.contract import Atividade, CadernoAtividades, ConteudoAtividade, ItemLegendaCor
+from app.icons import icone_para
 
 VERDE = "4CAF73"
 LARANJA = "F2683C"
@@ -285,7 +286,9 @@ def _conteudo_ligar_letra(slide, conteudo: ConteudoAtividade, cor: str) -> None:
     for indice, par in enumerate(pares[:limite]):
         y = inicio_y + indice * passo
         cartao = _forma(slide, MARGEM + 0.4, y, 7.2, 2.2, preenchimento=BRANCO, contorno=cor, espessura=1.5, arredondado=True)
-        _texto_na_forma(cartao, par.palavra, tamanho=13, negrito=True, cor=CINZA_ESCURO)
+        icone = icone_para(par.palavra)
+        texto = f"{icone}  {par.palavra}" if icone else par.palavra
+        _texto_na_forma(cartao, texto, tamanho=13, negrito=True, cor=CINZA_ESCURO)
         _circulo(slide, MARGEM + 7.9, y + 0.25, 0.55, cor)
 
         letra = _circulo(slide, LARGURA - MARGEM - 3.4, y + 0.15, 2.0, "FFF8E0", contorno=cor, espessura=1.8)

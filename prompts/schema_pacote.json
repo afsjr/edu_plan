@@ -381,6 +381,19 @@
         "letra": {
           "title": "Letra",
           "type": "string"
+        },
+        "icone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Chave opcional da biblioteca de ícones; o sistema também tenta pela palavra.",
+          "title": "Icone"
         }
       },
       "required": [

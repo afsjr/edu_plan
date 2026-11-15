@@ -114,6 +114,10 @@ class PlanoGerado(BaseModel):
 class ParLigar(BaseModel):
     palavra: str
     letra: str
+    icone: str | None = Field(
+        default=None,
+        description="Chave opcional da biblioteca de ícones; o sistema também tenta pela palavra.",
+    )
 
 
 class ItemLegendaCor(BaseModel):

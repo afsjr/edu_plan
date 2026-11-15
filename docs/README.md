@@ -21,6 +21,7 @@ o trabalho sem depender do histórico do chat.
 | `decisoes.md` | Por que escolhemos isso? | A cada decisão nova ou reaberta |
 | `escopo_mvp.md` | O que entra e o que não entra? | Quando o escopo mudar |
 | `roteiro_teste_cliente.md` | Como testar e o que observar? | Antes de cada rodada de teste |
+| `cloudflare.md` | Como preparar a geração de imagem futura? | Quando for implementar imagens em runtime |
 
 ## Regra de manutenção
 

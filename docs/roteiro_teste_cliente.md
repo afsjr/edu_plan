@@ -54,6 +54,7 @@ se o fluxo economiza tempo de verdade.
 - [ ] O plano tem as 7 seções do modelo.
 - [ ] Os códigos da BNCC estão corretos e coerentes com as atividades.
 - [ ] O caderno tem 5 atividades e cabe em A4.
+- [ ] Os ícones/emoji aparecem e são reconhecíveis para a faixa etária.
 - [ ] Os arquivos abrem no Word/PowerPoint e são editáveis.
 - [ ] A professora consegue corrigir sem dificuldade.
 - [ ] O tempo de geração é aceitável para uso interno.

@@ -87,7 +87,9 @@ Cada atividade tem:
   (1 a 3).
 - `desenhar_rosto`: `frases` (2 a 4 perguntas curtas de autoobservação).
 - `ligar_letra_inicial`: `pares` (2 a 5 pares com `palavra` e `letra`). Use
-  palavras concretas e letras iniciais corretas.
+  palavras concretas e letras iniciais corretas. Prefira objetos do dia a dia
+  que tenham um ícone óbvio; o sistema associa um emoji automaticamente quando
+  a palavra estiver na biblioteca.
 - `colorir_por_numero`: `legenda_cores` (2 a 6 itens com `numero` e `cor`).
 - `labirinto`: `rotulo_inicio` e `rotulo_fim`.
 

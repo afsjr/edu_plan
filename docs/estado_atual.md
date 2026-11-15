@@ -15,6 +15,8 @@ O provedor real de IA ainda **não foi testado** com uma chave de API.
 |---|---|
 | `data/bncc/bncc_ei.csv` | 93 objetivos de Educação Infantil extraídos do PDF oficial |
 | `data/bncc/mapeamento_escolar.csv` | Correspondência institucional: Berçário, Maternal, Pré I, Pré II |
+| `data/icons/icones.csv` | Biblioteca provisória de ícones/emoji das atividades |
+| `app/icons.py` | Resolve palavra → ícone, com normalização e fallback |
 | `scripts/extrair_bncc_ei.py` | Extrai os 93 objetivos do PDF e gera o CSV |
 | `scripts/validar_bncc.py` | Valida contagem, códigos, campos e textos |
 | `app/bncc.py` | Consulta em memória por grupo, campo e palavra |
@@ -30,20 +32,21 @@ O provedor real de IA ainda **não foi testado** com uma chave de API.
 | `prompts/system.md` | Prompt de sistema com as regras pedagógicas e de BNCC |
 | `prompts/few_shot.md` | Contrato destilado dos dois modelos de referência |
 | `prompts/schema_pacote.json` | JSON Schema do pacote gerado |
-| `tests/` | 19 testes automatizados |
-| `docs/` | Escopo, roteiro de teste, dor/validação, decisões e este snapshot |
+| `tests/` | 24 testes automatizados |
+| `docs/` | Escopo, roteiro de teste, decisões, estado atual e Cloudflare |
 
 ## Números atuais
 
 - **Base BNCC:** 93 linhas, todas com `revisado=S`.
   - Grupos: `EI01` 29, `EI02` 32, `EI03` 32.
   - Campos: `EO` 20, `CG` 15, `TS` 9, `EF` 27, `ET` 22.
-- **Testes:** 19 passando (`python3 -m pytest -q`).
+- **Testes:** 24 passando (`python3 -m pytest -q`).
 - **Plano:** 7 seções, 4 campos de experiência, objetivos Pré I/Pré II.
 - **Caderno:** capa + 5 atividades, cada uma com código BNCC e campo.
+- **Ícones/emoji:** ~80 chaves provisórias em `data/icons/icones.csv`.
 - **Modelos de referência:** 2 (plano `.docx` e caderno `.pptx`).
 - **Gerações de demonstração:** pastas em `storage/geracoes/`.
-- **Tamanho do código:** aproximadamente 3.900 linhas em `app/`, `scripts/`,
+- **Tamanho do código:** aproximadamente 4.000 linhas em `app/`, `scripts/`,
   `tests/`, `prompts/` e `docs/`.
 
 ## Comandos

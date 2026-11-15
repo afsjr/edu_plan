@@ -12,6 +12,7 @@ imprimir. PDF fica para uma etapa futura.
 - Base da BNCC de Educação Infantil: **93 objetivos** extraídos do PDF oficial.
 - Consulta rápida por grupo, campo de experiência e palavra-chave.
 - Geração do pacote completo (plano + caderno) em um clique.
+- Ícones/emoji na atividade de ligar palavra à letra, com biblioteca editável.
 - Validação que **impede código de BNCC inventado** e injeta a descrição oficial.
 - Histórico local das gerações.
 - Modo **mock** para testar sem chave de API e sem custo.
@@ -76,6 +77,7 @@ renderizadores `.docx`/`.pptx` e o fluxo HTTP completo.
 
 ```
 data/bncc/       bncc_ei.csv, mapeamento_escolar.csv, README.md
+data/icons/      icones.csv, README.md
 scripts/         extrair_bncc_ei.py, validar_bncc.py
 prompts/         system.md, few_shot.md, schema_pacote.json
 app/             bncc.py, contract.py, llm.py, pipeline.py
@@ -96,6 +98,7 @@ O índice completo está em [`docs/README.md`](docs/README.md). Os principais:
 - [`docs/decisoes.md`](docs/decisoes.md) — decisões técnicas e de produto.
 - [`docs/escopo_mvp.md`](docs/escopo_mvp.md) — o que entra e o que não entra.
 - [`docs/roteiro_teste_cliente.md`](docs/roteiro_teste_cliente.md) — como testar com a professora.
+- [`docs/cloudflare.md`](docs/cloudflare.md) — preparação para imagens em runtime.
 
 ## Regras de integridade
 

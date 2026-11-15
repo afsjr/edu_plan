@@ -73,4 +73,5 @@ def test_render_caderno_pptx(tmp_path):
 
     assert "CADERNO DE ATIVIDADES" in textos[0]
     assert "Este é o meu nome!" in textos[1]
+    assert "🍍" in textos[3] and "ABACAXI" in textos[3]
     assert "O caminho até a escola" in textos[5]

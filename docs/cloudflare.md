@@ -72,7 +72,7 @@ curl -s -X POST \
   -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"prompt":"flat vector illustration of a single pineapple, white background, thick outlines, no text","steps":4}' \
-| python3 -c "import sys,json,base64,pathlib; d=json.load(sys.stdin); pathlib.Path('teste.png').write_bytes(base64.b64decode(d['result']['image']))"
+| python3 -c "import sys,json,base64,pathlib; d=json.load(sys.stdin); pathlib.Path('teste.jpg').write_bytes(base64.b64decode(d['result']['image']))"
 ```
 
 ## No Vercel

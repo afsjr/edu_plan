@@ -45,10 +45,13 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "flat vector illustration of a single pineapple, thick clean outlines, solid pastel colors, white background, centered, childrens textbook style, no text, no letters, no numbers",
-    "steps": 4,
-    "seed": 42
+    "steps": 4
   }'
 ```
+
+> Não envie `seed`: o schema atual do FLUX.1 Schnell no Workers AI rejeita
+> esse campo com `Additional or unevaluated properties '/seed'`. Use apenas
+> `prompt` e `steps`.
 
 A resposta tem o formato:
 
@@ -68,7 +71,7 @@ curl -s -X POST \
   "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/ai/run/@cf/black-forest-labs/flux-1-schnell" \
   -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"prompt":"flat vector illustration of a single pineapple, white background, thick outlines, no text","steps":4,"seed":42}' \
+  -d '{"prompt":"flat vector illustration of a single pineapple, white background, thick outlines, no text","steps":4}' \
 | python3 -c "import sys,json,base64,pathlib; d=json.load(sys.stdin); pathlib.Path('teste.png').write_bytes(base64.b64decode(d['result']['image']))"
 ```
 
@@ -101,7 +104,8 @@ houver suspeita de vazamento.
 - Um objeto por imagem; fundo branco; contorno grosso; estilo flat.
 - Sem texto, letras, números ou marca d'água dentro da imagem.
 - Revisão humana antes de entrar no material do cliente.
-- Fixar modelo, seed e estilo para manter consistência.
+- Fixar modelo, prompt e estilo para manter consistência. O `seed` não é aceito
+  no schema atual do FLUX.1 Schnell no Workers AI.
 - Verificar os termos de uso do modelo e a licença das imagens.
 
 ## Links úteis

@@ -1,0 +1,503 @@
+{
+  "$defs": {
+    "AtividadeGerada": {
+      "properties": {
+        "numero": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Numero",
+          "type": "integer"
+        },
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "enunciado": {
+          "title": "Enunciado",
+          "type": "string"
+        },
+        "tipo": {
+          "enum": [
+            "cobrir_nome",
+            "desenhar_rosto",
+            "ligar_letra_inicial",
+            "colorir_por_numero",
+            "labirinto",
+            "outro"
+          ],
+          "title": "Tipo",
+          "type": "string"
+        },
+        "codigo_bncc": {
+          "description": "Código existente na lista de candidatos",
+          "title": "Codigo Bncc",
+          "type": "string"
+        },
+        "conteudo": {
+          "$ref": "#/$defs/ConteudoAtividade"
+        },
+        "gabarito": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gabarito"
+        }
+      },
+      "required": [
+        "numero",
+        "titulo",
+        "enunciado",
+        "tipo",
+        "codigo_bncc"
+      ],
+      "title": "AtividadeGerada",
+      "type": "object"
+    },
+    "BrincadeiraCasa": {
+      "properties": {
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "descricao": {
+          "title": "Descricao",
+          "type": "string"
+        },
+        "organizacao": {
+          "default": "",
+          "title": "Organizacao",
+          "type": "string"
+        }
+      },
+      "required": [
+        "titulo",
+        "descricao"
+      ],
+      "title": "BrincadeiraCasa",
+      "type": "object"
+    },
+    "CadernoGerado": {
+      "properties": {
+        "capa": {
+          "$ref": "#/$defs/CapaCaderno"
+        },
+        "atividades": {
+          "items": {
+            "$ref": "#/$defs/AtividadeGerada"
+          },
+          "minItems": 1,
+          "title": "Atividades",
+          "type": "array"
+        }
+      },
+      "required": [
+        "capa",
+        "atividades"
+      ],
+      "title": "CadernoGerado",
+      "type": "object"
+    },
+    "CampoExperienciaItem": {
+      "properties": {
+        "icone": {
+          "description": "Um emoji curto, ex.: 👥",
+          "title": "Icone",
+          "type": "string"
+        },
+        "nome": {
+          "title": "Nome",
+          "type": "string"
+        },
+        "justificativa": {
+          "title": "Justificativa",
+          "type": "string"
+        }
+      },
+      "required": [
+        "icone",
+        "nome",
+        "justificativa"
+      ],
+      "title": "CampoExperienciaItem",
+      "type": "object"
+    },
+    "CapaCaderno": {
+      "properties": {
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "subtitulo": {
+          "title": "Subtitulo",
+          "type": "string"
+        },
+        "etapa": {
+          "title": "Etapa",
+          "type": "string"
+        },
+        "faixa_etaria": {
+          "title": "Faixa Etaria",
+          "type": "string"
+        },
+        "alinhamento_bncc": {
+          "title": "Alinhamento Bncc",
+          "type": "string"
+        }
+      },
+      "required": [
+        "titulo",
+        "subtitulo",
+        "etapa",
+        "faixa_etaria",
+        "alinhamento_bncc"
+      ],
+      "title": "CapaCaderno",
+      "type": "object"
+    },
+    "ConteudoAtividade": {
+      "description": "Conteúdo específico de cada tipo de atividade.\n\nNem todo campo é usado em todo tipo. O renderizador escolhe os campos\nconforme ``AtividadeGerada.tipo``.",
+      "properties": {
+        "texto_para_cobrir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Nome ou palavra para cobrir, no tipo cobrir_nome",
+          "title": "Texto Para Cobrir"
+        },
+        "linhas_escrita": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Linhas Escrita"
+        },
+        "frases": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Frases",
+          "type": "array"
+        },
+        "pares": {
+          "items": {
+            "$ref": "#/$defs/ParLigar"
+          },
+          "title": "Pares",
+          "type": "array"
+        },
+        "legenda_cores": {
+          "items": {
+            "$ref": "#/$defs/ItemLegendaCor"
+          },
+          "title": "Legenda Cores",
+          "type": "array"
+        },
+        "rotulo_inicio": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotulo Inicio"
+        },
+        "rotulo_fim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotulo Fim"
+        },
+        "elementos_extras": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Elementos Extras",
+          "type": "array"
+        }
+      },
+      "title": "ConteudoAtividade",
+      "type": "object"
+    },
+    "HabilidadeSelecionada": {
+      "properties": {
+        "codigo": {
+          "description": "Código existente na lista de candidatos, ex.: EI03EF01",
+          "title": "Codigo",
+          "type": "string"
+        }
+      },
+      "required": [
+        "codigo"
+      ],
+      "title": "HabilidadeSelecionada",
+      "type": "object"
+    },
+    "Identificacao": {
+      "properties": {
+        "tema": {
+          "title": "Tema",
+          "type": "string"
+        },
+        "turmas": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Turmas",
+          "type": "array"
+        },
+        "faixa_etaria": {
+          "title": "Faixa Etaria",
+          "type": "string"
+        },
+        "tempo_estimado": {
+          "title": "Tempo Estimado",
+          "type": "string"
+        },
+        "area_integradora": {
+          "title": "Area Integradora",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tema",
+        "turmas",
+        "faixa_etaria",
+        "tempo_estimado",
+        "area_integradora"
+      ],
+      "title": "Identificacao",
+      "type": "object"
+    },
+    "ItemLegendaCor": {
+      "properties": {
+        "numero": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Numero",
+          "type": "integer"
+        },
+        "cor": {
+          "title": "Cor",
+          "type": "string"
+        }
+      },
+      "required": [
+        "numero",
+        "cor"
+      ],
+      "title": "ItemLegendaCor",
+      "type": "object"
+    },
+    "Momento": {
+      "properties": {
+        "ordem": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Ordem",
+          "type": "integer"
+        },
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "descricao": {
+          "title": "Descricao",
+          "type": "string"
+        },
+        "minutos": {
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Minutos",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ordem",
+        "titulo",
+        "descricao",
+        "minutos"
+      ],
+      "title": "Momento",
+      "type": "object"
+    },
+    "ObjetivosAno": {
+      "properties": {
+        "ano": {
+          "description": "Pré I ou Pré II",
+          "title": "Ano",
+          "type": "string"
+        },
+        "itens": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Itens",
+          "type": "array"
+        }
+      },
+      "required": [
+        "ano",
+        "itens"
+      ],
+      "title": "ObjetivosAno",
+      "type": "object"
+    },
+    "ParLigar": {
+      "properties": {
+        "palavra": {
+          "title": "Palavra",
+          "type": "string"
+        },
+        "letra": {
+          "title": "Letra",
+          "type": "string"
+        }
+      },
+      "required": [
+        "palavra",
+        "letra"
+      ],
+      "title": "ParLigar",
+      "type": "object"
+    },
+    "PlanoGerado": {
+      "properties": {
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "subtitulo": {
+          "title": "Subtitulo",
+          "type": "string"
+        },
+        "identificacao": {
+          "$ref": "#/$defs/Identificacao"
+        },
+        "campos_experiencia": {
+          "items": {
+            "$ref": "#/$defs/CampoExperienciaItem"
+          },
+          "minItems": 1,
+          "title": "Campos Experiencia",
+          "type": "array"
+        },
+        "objetivos": {
+          "items": {
+            "$ref": "#/$defs/ObjetivosAno"
+          },
+          "minItems": 1,
+          "title": "Objetivos",
+          "type": "array"
+        },
+        "habilidades": {
+          "items": {
+            "$ref": "#/$defs/HabilidadeSelecionada"
+          },
+          "minItems": 1,
+          "title": "Habilidades",
+          "type": "array"
+        },
+        "recursos": {
+          "items": {
+            "$ref": "#/$defs/Recurso"
+          },
+          "minItems": 1,
+          "title": "Recursos",
+          "type": "array"
+        },
+        "desenvolvimento": {
+          "items": {
+            "$ref": "#/$defs/Momento"
+          },
+          "minItems": 1,
+          "title": "Desenvolvimento",
+          "type": "array"
+        },
+        "dica": {
+          "title": "Dica",
+          "type": "string"
+        },
+        "brincadeira_casa": {
+          "$ref": "#/$defs/BrincadeiraCasa"
+        }
+      },
+      "required": [
+        "titulo",
+        "subtitulo",
+        "identificacao",
+        "campos_experiencia",
+        "objetivos",
+        "habilidades",
+        "recursos",
+        "desenvolvimento",
+        "dica",
+        "brincadeira_casa"
+      ],
+      "title": "PlanoGerado",
+      "type": "object"
+    },
+    "Recurso": {
+      "properties": {
+        "icone": {
+          "description": "Um emoji curto, ex.: 🪪",
+          "title": "Icone",
+          "type": "string"
+        },
+        "descricao": {
+          "title": "Descricao",
+          "type": "string"
+        }
+      },
+      "required": [
+        "icone",
+        "descricao"
+      ],
+      "title": "Recurso",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "plano": {
+      "$ref": "#/$defs/PlanoGerado"
+    },
+    "caderno": {
+      "$ref": "#/$defs/CadernoGerado"
+    }
+  },
+  "required": [
+    "plano",
+    "caderno"
+  ],
+  "title": "PacoteGerado",
+  "type": "object"
+}

@@ -1,0 +1,32 @@
+# Conteúdo do cliente (não versionar)
+exemplos base_inicial/
+docs/dor_e_validacao.md
+
+# Ferramental Reversa (interno, não faz parte do app)
+.agents/
+.claude/
+.reversa/
+_reversa_sdd/
+_reversa_forward/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Ambiente
+.env
+
+# Saídas geradas
+storage/
+
+# macOS
+.DS_Store
+
+# Legado vazio
+seed.html

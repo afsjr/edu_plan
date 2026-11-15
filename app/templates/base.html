@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Plano de Aula BNCC{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+  <header class="topo">
+    <a class="marca" href="/">Plano de Aula <span>BNCC</span></a>
+    <nav class="nav">
+      <a href="/">Gerar</a>
+      <a href="/bncc">Consultar BNCC</a>
+      <a href="/historico">Histórico</a>
+    </nav>
+  </header>
+
+  <main class="conteudo">
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">
+    MVP interno • Base BNCC 2018 • Revisar antes de aplicar
+  </footer>
+</body>
+</html>

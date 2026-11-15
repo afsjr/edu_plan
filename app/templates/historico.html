@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Histórico • Plano de Aula BNCC{% endblock %}
+
+{% block conteudo %}
+<section class="hero compacto">
+  <p class="olho">Histórico</p>
+  <h1>Materiais gerados</h1>
+  <p class="sub">Cada geração guarda os links dos arquivos e os códigos usados.</p>
+</section>
+
+{% if geracoes %}
+<section class="cartao">
+  <table class="tabela">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Tema</th>
+        <th>Turma</th>
+        <th>Provedor</th>
+        <th>Códigos</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for geracao in geracoes %}
+      <tr>
+        <td class="agora">{{ geracao.criado_em[:16].replace('T', ' ') }}</td>
+        <td><a href="/resultado/{{ geracao.id }}">{{ geracao.tema }}</a></td>
+        <td>{{ geracao.uso_escolar }}</td>
+        <td>{{ geracao.provedor }}</td>
+        <td class="codigos-curtos">{{ geracao.codigos|join(', ') }}</td>
+        <td class="direita">
+          <a class="link" href="/download/{{ geracao.id }}/plano">.docx</a>
+          <a class="link" href="/download/{{ geracao.id }}/caderno">.pptx</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% else %}
+<p class="vazio">Nenhum material gerado ainda.</p>
+{% endif %}
+{% endblock %}

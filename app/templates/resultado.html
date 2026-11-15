@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block titulo %}{{ registro.tema }} • Plano de Aula BNCC{% endblock %}
+
+{% block conteudo %}
+<section class="hero compacto">
+  <p class="olho">Geração {{ registro.id }}</p>
+  <h1>{{ registro.tema }}</h1>
+  <p class="sub">
+    {{ registro.uso_escolar }} • {{ registro.provedor }} •
+    {{ registro.criado_em[:16].replace('T', ' ') }}
+  </p>
+</section>
+
+<div class="acoes">
+  <a class="botao" href="/download/{{ registro.id }}/plano">Baixar plano (.docx)</a>
+  <a class="botao secundario" href="/download/{{ registro.id }}/caderno">Baixar caderno (.pptx)</a>
+  <a class="link" href="/">Gerar outro</a>
+</div>
+
+{% if registro.avisos %}
+<div class="alerta leve">
+  <strong>Pontos de atenção:</strong>
+  <ul>
+    {% for aviso in registro.avisos %}<li>{{ aviso }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% if pacote %}
+<div class="grade duas">
+  <section class="cartao">
+    <h2>Plano de aula</h2>
+    <p class="meta">{{ pacote.plano.identificacao.tempo_estimado }} • {{ pacote.plano.identificacao.faixa_etaria }}</p>
+
+    <h3>Habilidades da BNCC</h3>
+    <ul class="codigos">
+      {% for habilidade in pacote.plano.habilidades %}
+      <li><strong>{{ habilidade.codigo }}</strong> — {{ habilidade.descricao }}</li>
+      {% endfor %}
+    </ul>
+
+    <h3>Desenvolvimento</h3>
+    <ol class="momentos">
+      {% for momento in pacote.plano.desenvolvimento %}
+      <li>
+        <strong>{{ momento.titulo }}</strong>
+        <span class="minutos">{{ momento.minutos }} min</span>
+        <p>{{ momento.descricao }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section class="cartao">
+    <h2>Caderno de atividades</h2>
+    <p class="meta">{{ pacote.caderno.capa.etapa }} • {{ pacote.caderno.capa.faixa_etaria }}</p>
+
+    <ol class="atividades">
+      {% for atividade in pacote.caderno.atividades %}
+      <li>
+        <div class="atividade-topo">
+          <strong>{{ atividade.numero }}. {{ atividade.titulo }}</strong>
+          <span class="chip">{{ atividade.codigo_bncc }}</span>
+        </div>
+        <p>{{ atividade.enunciado }}</p>
+        <span class="tipo">{{ atividade.tipo }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+
+    <div class="aviso-leve">
+      Abra o arquivo no Word ou PowerPoint para corrigir textos, cores e
+      espaços antes de imprimir.
+    </div>
+  </section>
+</div>
+{% else %}
+<div class="alerta leve">
+  O resumo do pacote não foi encontrado, mas os arquivos continuam disponíveis
+  para download acima.
+</div>
+{% endif %}
+{% endblock %}

@@ -53,6 +53,7 @@
 | D-027 | Nota de cobertura no fim do PPT | aceita |
 | D-028 | OpenAI gpt-4o para gerar e gpt-4o-mini para verificar | provisória |
 | D-029 | 8 tipos genéricos de atividade | aceita |
+| D-030 | Sanitização de ícones e texto fora do português | aceita |
 
 ---
 
@@ -346,6 +347,18 @@
 - **Reabrir se:** o cliente exigir tipos específicos por campo.
 - **Status:** aceita.
 
+### D-030 — Sanitização de ícones e texto fora do português
+
+- **Contexto:** o OpenAI devolveu caracteres chineses e glifos não suportados nos
+  campos `icone`; o Word exibiu caracteres estranhos e caixas.
+- **Decisão:** o ícone dos campos de experiência vem do mapa oficial
+  (`EO`, `CG`, `TS`, `EF`, `ET` no DOCX); o ícone dos recursos é validado contra
+  a biblioteca e cai para `•`; o DOCX não usa emojis. Texto com caracteres
+  chineses, japoneses ou coreanos é rejeitado e entra no loop de reparo.
+- **Consequência:** documento limpo e imprimível; menos emoji no DOCX.
+- **Reabrir se:** houver uma biblioteca PNG/SVG própria para os ícones.
+- **Status:** aceita.
+
 ---
 
 ## Nova decisão (modelo)
@@ -368,3 +381,4 @@
 | 2026-11-15 | Ícones/emoji na atividade de ligar e biblioteca estática (D-020, D-021). |
 | 2026-11-15 | Deploy Vercel one-shot e Groq free para o teste (D-022, D-023). |
 | 2026-11-15 | Fluxo por código, duas etapas, 10 seções e nota de cobertura (D-024 a D-029). |
+| 2026-11-15 | Sanitização de ícones e rejeição de texto CJK (D-030). |

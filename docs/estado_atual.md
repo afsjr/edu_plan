@@ -42,7 +42,7 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 | `prompts/system_atividades.md` | Prompt da etapa das atividades |
 | `prompts/schema_plano.json` | Schema da etapa do plano |
 | `prompts/schema_caderno.json` | Schema da etapa das atividades |
-| `tests/` | 30 testes automatizados |
+| `tests/` | 32 testes automatizados |
 | `docs/` | Estado, decisões, escopo, teste, questionário e provedores |
 
 ## Números atuais
@@ -53,7 +53,9 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 - Tipos de atividade: 8 (`cobrir_palavra`, `ligar`, `contar`, `colorir`,
   `completar`, `desenhar`, `labirinto`, `recortar_colar`).
 - Ícones/emoji: ~80 chaves provisórias.
-- Testes: 30 passando.
+- Testes: 32 passando.
+- Sanitização: ícone fora da biblioteca vira `•`; texto com caracteres CJK é
+  rejeitado e entra no loop de reparo.
 
 ## Comandos
 

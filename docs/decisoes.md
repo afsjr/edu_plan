@@ -54,6 +54,7 @@
 | D-028 | OpenAI gpt-4o para gerar e gpt-4o-mini para verificar | provisória |
 | D-029 | 8 tipos genéricos de atividade | aceita |
 | D-030 | Sanitização de ícones e texto fora do português | aceita |
+| D-031 | Imagem em runtime com Cloudflare, 1 por pacote | aceita |
 
 ---
 
@@ -359,6 +360,18 @@
 - **Reabrir se:** houver uma biblioteca PNG/SVG própria para os ícones.
 - **Status:** aceita.
 
+### D-031 — Imagem em runtime com Cloudflare
+
+- **Contexto:** o cliente espera ilustrações; imagem por IA é barata no
+  Cloudflare e não precisa de Blob.
+- **Decisão:** FLUX.1 Schnell, 1 imagem por pacote (configurável por
+  `IMAGE_MAX`), base64 no JSON do caderno, fallback para ícone/emoji. Sem imagem
+  para contagem, letras ou sílabas.
+- **Consequência:** imagem sem storage persistente; o JSON cresce ~100–250 KB;
+  o download re-renderiza.
+- **Reabrir se:** o cliente quiser 2+ imagens, biblioteca estática ou Blob.
+- **Status:** aceita.
+
 ---
 
 ## Nova decisão (modelo)
@@ -382,3 +395,4 @@
 | 2026-11-15 | Deploy Vercel one-shot e Groq free para o teste (D-022, D-023). |
 | 2026-11-15 | Fluxo por código, duas etapas, 10 seções e nota de cobertura (D-024 a D-029). |
 | 2026-11-15 | Sanitização de ícones e rejeição de texto CJK (D-030). |
+| 2026-11-16 | Imagem em runtime com Cloudflare (D-031). |

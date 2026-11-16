@@ -88,15 +88,19 @@ IMAGE_PROVIDER=cloudflare
 Nunca comite esses valores. Use um token só para o projeto e rotacione se
 houver suspeita de vazamento.
 
-## Como integrar depois
+## Integração implementada
 
-1. Criar `app/image.py` com uma função `gerar_imagem(prompt: str) -> bytes`.
-2. Chamar o endpoint `/ai/run/@cf/black-forest-labs/flux-1-schnell`.
-3. Decodificar `result.image` de base64 para bytes.
-4. Embutir a imagem no `.pptx` com `python-pptx`; não precisa de Blob nem de
-   disco.
-5. Gerar no máximo 1 ou 2 imagens por pacote, em paralelo.
-6. Se a imagem falhar, usar o ícone/emoji como fallback.
+- `app/image.py` com `gerar_imagem(prompt) -> base64`.
+- Variáveis: `IMAGE_PROVIDER=cloudflare`, `CLOUDFLARE_ACCOUNT_ID`,
+  `CLOUDFLARE_API_TOKEN`.
+- Opcionais: `IMAGE_MAX=1` (padrão), `IMAGE_STEPS=4`, `IMAGE_MODEL`.
+- A imagem é gerada na etapa das atividades, **1 por pacote**, e vai em
+  `base64` no JSON do caderno. Sem Blob, sem disco.
+- Só para atividades de ilustração; **nunca** para contagem, letras ou sílabas.
+- O renderizador coloca a imagem no slide da atividade; se falhar, cai para
+  ícone/emoji/formas.
+
+No `.env`, as linhas do Cloudflare precisam estar **ativas**, sem `#`.
 
 ## Regras de segurança pedagógica
 

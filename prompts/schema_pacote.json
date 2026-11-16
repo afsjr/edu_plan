@@ -40,6 +40,25 @@
           "title": "Objetivo Relacionado",
           "type": "string"
         },
+        "imagem_chave": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Chave opcional da biblioteca de ícones",
+          "title": "Imagem Chave"
+        },
+        "imagem_alt": {
+          "default": "",
+          "description": "Descrição curta, em português, da imagem que ilustraria a atividade",
+          "title": "Imagem Alt",
+          "type": "string"
+        },
         "conteudo": {
           "$ref": "#/$defs/ConteudoAtividade"
         },

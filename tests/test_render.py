@@ -84,3 +84,26 @@ def test_render_caderno_pptx(tmp_path):
     assert "O caminho até a escola" in textos[5]
     assert "Nota para o professor" in textos[6]
     assert "EI03EO01" in textos[6] or "EI03EO04" in textos[6]
+
+
+PNG_1X1 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+
+
+def test_render_caderno_com_imagem(tmp_path):
+    from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+    pacote = _pacote_resolvido()
+    atividades = [
+        a.model_copy(update={"imagem_base64": PNG_1X1}) if a.numero == 1 else a
+        for a in pacote.caderno.atividades
+    ]
+    caderno = pacote.caderno.model_copy(update={"atividades": atividades})
+    caminho = render_caderno(caderno, tmp_path / "caderno_img.pptx")
+
+    apresentacao = Presentation(caminho)
+    fotos = [
+        shape
+        for shape in apresentacao.slides[1].shapes
+        if shape.shape_type == MSO_SHAPE_TYPE.PICTURE
+    ]
+    assert fotos

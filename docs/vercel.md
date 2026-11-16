@@ -55,6 +55,15 @@ LLM_MODEL=gpt-4o
 LLM_API_KEY=...
 ```
 
+Para imagem em runtime:
+
+```env
+IMAGE_PROVIDER=cloudflare
+CLOUDFLARE_ACCOUNT_ID=...
+CLOUDFLARE_API_TOKEN=...
+IMAGE_MAX=1
+```
+
 `VERCEL_DEMO` não é mais usado: o fluxo em duas etapas funciona no Vercel sem
 disco.
 
@@ -75,7 +84,8 @@ disco.
 4. `POST /gerar-atividades` com o plano JSON → página das atividades.
 5. Baixar `.docx` e `.pptx`; abrir no Word/PowerPoint.
 6. Conferir a nota de cobertura no último slide.
-7. Logs do Vercel sem erro de escrita em disco.
+7. Com `IMAGE_PROVIDER=cloudflare`, conferir a imagem no slide de uma atividade.
+8. Logs do Vercel sem erro de escrita em disco.
 
 ## Limites do Hobby
 

@@ -156,6 +156,10 @@ def _validar_portugues_caderno(gerado: CadernoGerado) -> None:
             atividade.objetivo_relacionado,
             f"caderno.atividades[{indice}].objetivo",
         )
+        _checar_portugues(
+            atividade.imagem_alt,
+            f"caderno.atividades[{indice}].imagem_alt",
+        )
         if atividade.gabarito:
             _checar_portugues(atividade.gabarito, f"caderno.atividades[{indice}].gabarito")
         for frase in atividade.conteudo.frases:
@@ -305,6 +309,14 @@ class AtividadeGerada(BaseModel):
     objetivo_relacionado: str = Field(
         description="Objetivo do plano, copiado verbatim"
     )
+    imagem_chave: str | None = Field(
+        default=None,
+        description="Chave opcional da biblioteca de ícones",
+    )
+    imagem_alt: str = Field(
+        default="",
+        description="Descrição curta, em português, da imagem que ilustraria a atividade",
+    )
     conteudo: ConteudoAtividade = Field(default_factory=ConteudoAtividade)
     gabarito: str | None = None
 
@@ -370,6 +382,9 @@ class Atividade(BaseModel):
     campo_experiencia: str
     descricao_bncc: str
     objetivo_relacionado: str
+    imagem_chave: str | None = None
+    imagem_alt: str = ""
+    imagem_base64: str | None = None
     conteudo: ConteudoAtividade
     gabarito: str | None = None
 
@@ -511,6 +526,8 @@ def resolver_caderno(
                 campo_experiencia=resolvida.campo_experiencia,
                 descricao_bncc=resolvida.descricao,
                 objetivo_relacionado=item.objetivo_relacionado,
+                imagem_chave=item.imagem_chave,
+                imagem_alt=item.imagem_alt,
                 conteudo=item.conteudo,
                 gabarito=item.gabarito,
             )

@@ -20,7 +20,8 @@ desse plano**.
   `objetivo_relacionado`.
 - O texto pedagógico (título, enunciado, conteúdo) é seu, mas não pode
   atribuir à BNCC nada que não esteja no plano.
-- Não use imagens geradas por IA. O caderno usa formas, textos e emojis.
+- A imagem de apoio não pode ter texto, letras ou números dentro dela.
+- Não peça imagem para contagem, sílabas ou letras; use ícones/formas nesses casos.
 
 # Entrada
 
@@ -38,7 +39,11 @@ Responda somente com JSON válido no schema `schema_caderno.json`.
    faixa_etaria, alinhamento_bncc e codigo_ancora.
 2. `atividades`: exatamente **5 atividades**, numeradas de 1 a 5.
    - Cada uma tem `titulo`, `enunciado` (uma frase no imperativo), `tipo`,
-     `codigo_bncc`, `objetivo_relacionado`, `conteudo` e `gabarito` opcional.
+     `codigo_bncc`, `objetivo_relacionado`, `conteudo`, `imagem_alt` e
+     `gabarito` opcional.
+   - `imagem_alt`: descrição curta em português do objeto/cena que ilustraria
+     a atividade. Deixe vazio para contagem, letras ou palavras.
+   - `imagem_chave`: opcional; use apenas uma chave da biblioteca de ícones.
    - Use **5 tipos diferentes** quando possível, entre:
      `cobrir_palavra`, `ligar`, `contar`, `colorir`, `completar`, `desenhar`,
      `labirinto`, `recortar_colar`.

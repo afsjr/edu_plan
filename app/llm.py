@@ -262,6 +262,8 @@ class MockLLM:
                     tipo=tipo,
                     codigo_bncc=codigo,
                     objetivo_relacionado=objetivos[(indice - 1) % len(objetivos)],
+                    imagem_chave=self._imagem_chave(tipo),
+                    imagem_alt=self._imagem_alt(tipo),
                     conteudo=conteudo,
                 )
             )
@@ -289,6 +291,30 @@ class MockLLM:
                 ],
             ),
         )
+
+    def _imagem_alt(self, tipo: str) -> str:
+        if tipo in {"contar", "cobrir_palavra"}:
+            return ""
+        return {
+            "ligar": "objetos da atividade para ligar",
+            "colorir": "cena simples para colorir",
+            "desenhar": "criança desenhando sobre o tema",
+            "completar": "sequência de objetos da atividade",
+            "labirinto": "caminho simples até a escola",
+            "recortar_colar": "formas para recortar e colar",
+        }.get(tipo, "ilustração do tema da aula")
+
+    def _imagem_chave(self, tipo: str) -> str | None:
+        return {
+            "ligar": "bola",
+            "contar": "bola",
+            "colorir": "tinta",
+            "desenhar": "lapis",
+            "completar": "numero",
+            "labirinto": "casa",
+            "recortar_colar": "tesoura",
+            "cobrir_palavra": "letra",
+        }.get(tipo)
 
     def _conteudo_por_tipo(self, tipo: str, indice: int):
         if tipo == "cobrir_palavra":

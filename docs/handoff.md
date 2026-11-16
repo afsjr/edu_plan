@@ -10,7 +10,8 @@
 - **Produção:** https://plano-aula-bncc.vercel.app
 - **Vercel:** projeto `plano-aula-bncc`, time `adelinos-projects`, CLI logado como `afsjr`
 - **Provedor ativo:** `openai-compativel` (`LLM_MODEL=gpt-4o`); o selo na home confirma
-- **Testes:** 32 passando
+- **Imagem:** Cloudflare FLUX, 1 por pacote, base64 no JSON
+- **Testes:** 37 passando
 
 ## O que está funcionando
 
@@ -21,6 +22,7 @@
 - Atividades derivadas do plano; **nota de cobertura** no fim do PPT (não trabalhados + sugestões extras).
 - **Loop de reparo** de até 3 tentativas; se não convergir, bloqueia.
 - **Sanitização:** ícone de campo vira sigla no DOCX (`EO`, `CG`, `TS`, `EF`, `ET`); recurso vira `•`; DOCX sem emojis; texto CJK é rejeitado e reparado.
+- **Imagem em runtime:** Cloudflare FLUX, 1 por pacote, no slide da atividade; fallback para ícone/emoji; sem Blob.
 - Documentos `.docx` e `.pptx` editáveis; fluxo sem estado no servidor (plano JSON no navegador).
 - Consulta à BNCC em `/bncc`.
 - Questionário do cliente em `docs/questionario_cliente.md`.
@@ -37,10 +39,10 @@
    - Implementar `scripts/buscar_icones.py` + `data/icons/arquivos/` + `CREDITS.md`.
    - Tamanho sugerido: 200–300 SVGs para EI (~2–6 MB); +200–300 para Fund I (~5–15 MB).
    - Não raspar Google Imagens; usar Iconify/Openverse/Wikimedia com licença.
-2. **Cloudflare**
-   - Conta criada. Próximos passos: obter **Account ID**, criar **Workers AI API Token** (Read + Edit), testar FLUX.1 Schnell sem `seed`.
-   - Free: 10.000 neurons/dia; ~200–230 imagens/dia em 512×512 com 4 steps.
-   - Guardar credenciais em `.env` (ignorado) e, depois, no Vercel.
+2. **Cloudflare / imagens**
+   - Chaves validadas: token ativo e FLUX gerando imagem.
+   - Runtime implementado: `IMAGE_PROVIDER=cloudflare`, `IMAGE_MAX=1`, base64 no JSON.
+   - Próximo: biblioteca estática de PNG/SVG para os ícones; decidir se a imagem será 1 ou 2 por pacote.
 3. **Verificador semântico**
    - `gpt-4o-mini` + reparo semântico ainda não implementado; o determinístico já roda.
 4. **Cliente**
@@ -75,9 +77,9 @@ LLM_API_KEY=...
 
 - O mock é estrutural; só o OpenAI real mede qualidade pedagógica.
 - Os modelos do cliente são por tema; o fluxo por código é uma decisão de produto.
-- O `.pptx` ainda usa emojis decorativos; se aparecerem caixas no PowerPoint, trocar por PNGs da biblioteca.
-- Sem histórico no web/Vercel; sem PDF; sem Fund I; sem imagem em runtime.
-- O verificador semântico e a biblioteca de imagens são as próximas trilhas.
+- O `.pptx` ainda usa emojis decorativos na capa e nos ícones; a imagem de atividade é gerada.
+- Sem histórico no web/Vercel; sem PDF; sem Fund I.
+- A biblioteca estática de PNG/SVG e o verificador semântico são as próximas trilhas.
 
 ## Primeiro passo da próxima sessão
 

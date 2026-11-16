@@ -32,7 +32,8 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 | `app/bncc.py` | Consulta e seleção do âncora + 6 relacionados |
 | `app/contract.py` | Contrato do plano e do caderno, resolução e validação |
 | `app/llm.py` | Mock estrutural e cliente OpenAI/compatível em duas etapas |
-| `app/pipeline.py` | `gerar_plano` → `gerar_atividades` → verificação |
+| `app/image.py` | Geração de imagem em runtime com Cloudflare/FLUX |
+| `app/pipeline.py` | `gerar_plano` → `gerar_atividades` → verificação → imagem |
 | `app/render_docx.py` | Plano em `.docx` com as 10 seções |
 | `app/render_pptx.py` | Capa + 5 atividades + nota de cobertura |
 | `app/main.py` | Duas etapas: código → plano → validar → atividades |
@@ -42,7 +43,7 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 | `prompts/system_atividades.md` | Prompt da etapa das atividades |
 | `prompts/schema_plano.json` | Schema da etapa do plano |
 | `prompts/schema_caderno.json` | Schema da etapa das atividades |
-| `tests/` | 32 testes automatizados |
+| `tests/` | 37 testes automatizados |
 | `docs/` | Estado, decisões, escopo, teste, questionário e provedores |
 
 ## Números atuais
@@ -53,9 +54,11 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 - Tipos de atividade: 8 (`cobrir_palavra`, `ligar`, `contar`, `colorir`,
   `completar`, `desenhar`, `labirinto`, `recortar_colar`).
 - Ícones/emoji: ~80 chaves provisórias.
-- Testes: 32 passando.
+- Testes: 37 passando.
 - Sanitização: ícone fora da biblioteca vira `•`; texto com caracteres CJK é
   rejeitado e entra no loop de reparo.
+- Imagem em runtime: Cloudflare FLUX, 1 por pacote, base64 no JSON; fallback
+  para ícone/emoji.
 
 ## Comandos
 
@@ -87,7 +90,8 @@ python3 -m app.pipeline --codigo EI03EF01 --uso "Pré II" --provider mock
 - Os modelos do cliente são por tema; o fluxo por código é uma decisão de produto.
 - Sem PDF, login, pagamento ou multiusuário.
 - Sem histórico no web/Vercel; o plano JSON fica no navegador entre as etapas.
-- Sem imagem em runtime.
+- A imagem em runtime é 1 por pacote e não é usada em contagem/letras.
+- A biblioteca estática de PNG/SVG ainda não foi criada.
 - Os 8 tipos de atividade são templates; alguns temas vão exigir ajuste.
 - O verificador LLM (`gpt-4o-mini`) está previsto, mas ainda não implementado.
 

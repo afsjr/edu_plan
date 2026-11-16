@@ -7,6 +7,8 @@ e corrigir o material.
 
 from __future__ import annotations
 
+import base64
+import io
 from pathlib import Path
 
 from pptx import Presentation
@@ -229,9 +231,47 @@ def _cabecalho_atividade(slide, atividade: Atividade, cor: str) -> None:
     selo = _forma(slide, LARGURA - MARGEM - 6.0, 0.72, 6.0, 1.5, preenchimento=BRANCO, arredondado=True)
     _texto_na_forma(selo, f"{atividade.codigo_bncc}  •  {atividade.campo_experiencia}", tamanho=7.8, negrito=True, cor=cor)
 
+    tem_imagem = bool(atividade.imagem_base64)
+    largura_texto = CONTEUDO - 0.7
+    if tem_imagem:
+        largura_texto -= 2.5
+
     _forma(slide, MARGEM, 3.35, CONTEUDO, 2.35, preenchimento=CINZA_CLARO, arredondado=True)
-    _texto(slide, MARGEM + 0.35, 3.5, CONTEUDO - 0.7, 1.15, atividade.enunciado, tamanho=11, cor=CINZA_ESCURO, ancoragem=MSO_ANCHOR.MIDDLE)
-    _texto(slide, MARGEM + 0.35, 4.7, CONTEUDO - 0.7, 0.8, f"Objetivo: {atividade.objetivo_relacionado}", tamanho=7.5, cor=CINZA_TEXTO, ancoragem=MSO_ANCHOR.MIDDLE)
+    _texto(
+        slide,
+        MARGEM + 0.35,
+        3.5,
+        largura_texto,
+        1.15,
+        atividade.enunciado,
+        tamanho=10 if tem_imagem else 11,
+        cor=CINZA_ESCURO,
+        ancoragem=MSO_ANCHOR.MIDDLE,
+    )
+    _texto(
+        slide,
+        MARGEM + 0.35,
+        4.7,
+        largura_texto,
+        0.8,
+        f"Objetivo: {atividade.objetivo_relacionado}",
+        tamanho=7.5,
+        cor=CINZA_TEXTO,
+        ancoragem=MSO_ANCHOR.MIDDLE,
+    )
+
+    if tem_imagem:
+        try:
+            dados = base64.b64decode(atividade.imagem_base64)
+            slide.shapes.add_picture(
+                io.BytesIO(dados),
+                Cm(MARGEM + 0.35 + largura_texto + 0.2),
+                Cm(3.45),
+                width=Cm(2.1),
+                height=Cm(2.1),
+            )
+        except Exception:
+            pass
 
 
 def _conteudo_cobrir_palavra(slide, conteudo: ConteudoAtividade, cor: str) -> None:

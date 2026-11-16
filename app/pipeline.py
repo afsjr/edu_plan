@@ -5,11 +5,14 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import logging
+import os
 import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from app import image as image_service
 from app import storage
 from app.bncc import BaseBNCC
 from app.config import carregar_env
@@ -30,6 +33,8 @@ from app.render_docx import render_plano
 from app.render_pptx import render_caderno
 
 carregar_env()
+
+logger = logging.getLogger("plano_aula.pipeline")
 
 
 def _schemas() -> tuple[dict, dict]:
@@ -100,7 +105,8 @@ def gerar_atividades(
                 schema_caderno,
                 feedback=feedback,
             )
-            return resolver_caderno(gerado, plano, base)
+            caderno = resolver_caderno(gerado, plano, base)
+            return enriquecer_imagens(caderno, plano)
         except (ErroContrato, ErroLLM, ValueError) as erro:
             ultimo_erro = erro
             feedback.append(str(erro))
@@ -108,6 +114,60 @@ def gerar_atividades(
     raise ErroContrato(
         f"Não foi possível gerar atividades válidas após 3 tentativas: {ultimo_erro}"
     )
+
+
+def enriquecer_imagens(
+    caderno: CadernoAtividades,
+    plano: PlanoAula,
+) -> CadernoAtividades:
+    """Gera no máximo IMAGE_MAX imagens por pacote, sem contar/letras."""
+    if not image_service.disponivel():
+        return caderno
+
+    try:
+        maximo = int(os.getenv("IMAGE_MAX") or "1")
+    except ValueError:
+        maximo = 1
+    maximo = max(0, min(maximo, 2))
+    if maximo == 0:
+        return caderno
+
+    candidatas = {
+        atividade.numero
+        for atividade in caderno.atividades
+        if atividade.imagem_alt
+        and atividade.tipo not in {"contar", "cobrir_palavra"}
+        and not atividade.imagem_base64
+    }
+    if not candidatas:
+        return caderno
+
+    geradas = 0
+    atividades = []
+    for atividade in caderno.atividades:
+        if geradas < maximo and atividade.numero in candidatas:
+            try:
+                prompt = image_service.montar_prompt(
+                    atividade.imagem_alt,
+                    plano.identificacao.tema,
+                )
+                imagem = image_service.gerar_imagem(prompt)
+                atividades.append(
+                    atividade.model_copy(update={"imagem_base64": imagem})
+                )
+                geradas += 1
+                logger.info("Imagem gerada para a atividade %s", atividade.numero)
+            except image_service.ErroImagem as erro:
+                logger.warning(
+                    "Falha ao gerar imagem da atividade %s: %s",
+                    atividade.numero,
+                    erro,
+                )
+                atividades.append(atividade)
+        else:
+            atividades.append(atividade)
+
+    return caderno.model_copy(update={"atividades": atividades})
 
 
 def gerar_pacote(

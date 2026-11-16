@@ -41,6 +41,11 @@
         <strong>Objetivo:</strong> {{ atividade.objetivo_relacionado }}
       </p>
       <p class="meta">BNCC: {{ atividade.descricao_bncc }}</p>
+      {% if atividade.imagem_base64 %}
+      <img class="atividade-imagem"
+           src="data:image/jpeg;base64,{{ atividade.imagem_base64 }}"
+           alt="{{ atividade.imagem_alt }}">
+      {% endif %}
       <span class="tipo">{{ atividade.campo_experiencia }}</span>
     </li>
     {% endfor %}

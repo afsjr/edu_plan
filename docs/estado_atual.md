@@ -1,7 +1,7 @@
 # Estado atual do projeto
 
 > Snapshot para retomar o trabalho sem depender do histórico do chat.
-> Última atualização: 2026-11-15.
+> Última atualização: 2026-11-16.
 
 ## Status em uma frase
 

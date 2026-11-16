@@ -1,7 +1,7 @@
 # Handoff — retomada do projeto
 
 > Documento de passagem de sessão. Leia este arquivo primeiro ao retomar.
-> Última atualização: 2026-11-15.
+> Última atualização: 2026-11-16.
 
 ## Estado
 
@@ -12,6 +12,7 @@
 - **Provedor ativo:** `openai-compativel` (`LLM_MODEL=gpt-4o`); o selo na home confirma
 - **Imagem:** Cloudflare FLUX, 1 por pacote, base64 no JSON
 - **Testes:** 41 passando
+- **Produção validada em 2026-11-16:** OpenAI gpt-4o + Cloudflare, 1 imagem, PPTX 7 slides, DOCX limpo
 
 ## O que está funcionando
 

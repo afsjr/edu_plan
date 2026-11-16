@@ -11,8 +11,8 @@
 - **Vercel:** projeto `plano-aula-bncc`, time `adelinos-projects`, CLI logado como `afsjr`
 - **Provedor ativo:** `openai-compativel` (`LLM_MODEL=gpt-4o`); o selo na home confirma
 - **Imagem:** Cloudflare FLUX, 5 por pacote (uma por atividade), 512 px, base64
-- **Testes:** 42 passando
-- **Produção validada em 2026-11-16:** OpenAI gpt-4o + Cloudflare, 1 imagem, PPTX 7 slides, DOCX limpo
+- **Testes:** 43 passando
+- **Produção validada em 2026-11-16:** 5 imagens, atividades variando, PPTX 7 slides, DOCX limpo; 2 avisos do verificador em `EI03EO07`
 
 ## O que está funcionando
 
@@ -24,7 +24,7 @@
 - **Loop de reparo** de até 3 tentativas; se não convergir, bloqueia.
 - **Sanitização:** ícone de campo vira sigla no DOCX (`EO`, `CG`, `TS`, `EF`, `ET`); recurso vira `•`; DOCX sem emojis; texto CJK é rejeitado e reparado.
 - **Imagem em runtime:** Cloudflare FLUX, 5 por pacote, no slide de cada atividade; 512 px; fallback; sem Blob.
-- **Verificador semântico:** `gpt-4o-mini` com reparo; regra campo → tipo de atividade.
+- **Verificador semântico:** `gpt-4o-mini` com reparo; se não convergir, entrega com `avisos_qualidade`.
 - Documentos `.docx` e `.pptx` editáveis; fluxo sem estado no servidor (plano JSON no navegador).
 - Consulta à BNCC em `/bncc`.
 - Questionário do cliente em `docs/questionario_cliente.md`.
@@ -46,7 +46,8 @@
    - Runtime implementado: `IMAGE_PROVIDER=cloudflare`, `IMAGE_MAX=5`, 512 px, base64 no JSON.
    - Próximo: biblioteca estática de PNG/SVG para os ícones.
 3. **Verificador semântico**
-   - `gpt-4o-mini` + reparo implementado; regra campo → tipo de atividade.
+   - Implementado; ainda aponta 2 atividades no `EI03EO07` (labirinto para objetivos de expressão/convivência).
+   - Próximo: ajustar o prompt ou criar um tipo de atividade de movimento/mímica.
 4. **Cliente**
    - Aplicar o questionário e comparar o material real com os 2 modelos.
 5. **Futuro**

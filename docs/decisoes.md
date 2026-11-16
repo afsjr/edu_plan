@@ -60,6 +60,7 @@
 | D-034 | 5 imagens por pacote, 512 px, ilustrativas | aceita |
 | D-035 | Atividades variam (temperatura 0.8) e botão de nova versão | aceita |
 | D-036 | Verificador semântico gpt-4o-mini + regra campo → tipo | aceita |
+| D-037 | Entrega com avisos se o verificador não convergir | aceita |
 
 ---
 
@@ -422,6 +423,14 @@
 - **Consequência:** menos atividades desalinhadas; uma chamada extra de IA.
 - **Status:** aceita.
 
+### D-037 — Entrega com avisos do verificador
+
+- **Contexto:** o verificador pode reprovar 3 vezes e bloquear a entrega com 400.
+- **Decisão:** se a estrutura estiver correta, entregar o último caderno com
+  `avisos_qualidade` visíveis na tela; não bloquear o professor.
+- **Consequência:** o professor recebe o material e vê o que revisar.
+- **Status:** aceita.
+
 ---
 
 ## Nova decisão (modelo)
@@ -448,3 +457,4 @@
 | 2026-11-16 | Imagem em runtime com Cloudflare (D-031). |
 | 2026-11-16 | Objetivo por índice e prompt sem descrição BNCC (D-032). |
 | 2026-11-16 | Título curto, 5 imagens, variação e verificador (D-033 a D-036). |
+| 2026-11-16 | Entrega com avisos do verificador (D-037). |

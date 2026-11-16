@@ -43,7 +43,7 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 | `prompts/system_atividades.md` | Prompt da etapa das atividades |
 | `prompts/schema_plano.json` | Schema da etapa do plano |
 | `prompts/schema_caderno.json` | Schema da etapa das atividades |
-| `tests/` | 41 testes automatizados |
+| `tests/` | 42 testes automatizados |
 | `docs/` | Estado, decisões, escopo, teste, questionário e provedores |
 
 ## Números atuais
@@ -54,11 +54,11 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 - Tipos de atividade: 8 (`cobrir_palavra`, `ligar`, `contar`, `colorir`,
   `completar`, `desenhar`, `labirinto`, `recortar_colar`).
 - Ícones/emoji: ~80 chaves provisórias.
-- Testes: 41 passando.
+- Testes: 42 passando.
 - Sanitização: ícone fora da biblioteca vira `•`; texto com caracteres CJK é
   rejeitado e entra no loop de reparo.
-- Imagem em runtime: Cloudflare FLUX, 1 por pacote, base64 no JSON; fallback
-  para ícone/emoji.
+- Imagem em runtime: Cloudflare FLUX, 5 por pacote (uma por atividade), 512 px,
+  base64 no JSON; fallback para ícone/emoji.
 
 ## Comandos
 
@@ -90,10 +90,10 @@ python3 -m app.pipeline --codigo EI03EF01 --uso "Pré II" --provider mock
 - Os modelos do cliente são por tema; o fluxo por código é uma decisão de produto.
 - Sem PDF, login, pagamento ou multiusuário.
 - Sem histórico no web/Vercel; o plano JSON fica no navegador entre as etapas.
-- A imagem em runtime é 1 por pacote e não é usada em contagem/letras.
+- A imagem em runtime é 1 por atividade e é ilustrativa; não serve para contar/escrever.
 - A biblioteca estática de PNG/SVG ainda não foi criada.
 - Os 8 tipos de atividade são templates; alguns temas vão exigir ajuste.
-- O verificador LLM (`gpt-4o-mini`) está previsto, mas ainda não implementado.
+- O verificador semântico (`gpt-4o-mini`) já roda após as atividades.
 
 ## Próximos passos
 

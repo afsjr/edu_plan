@@ -106,7 +106,19 @@ def gerar_atividades(
                 feedback=feedback,
             )
             caderno = resolver_caderno(gerado, plano, base)
-            return enriquecer_imagens(caderno, plano)
+            try:
+                relatorio = cliente.verificar_atividades(plano, caderno)
+            except ErroLLM as erro:
+                logger.warning("Verificador indisponível: %s", erro)
+                return enriquecer_imagens(caderno, plano)
+            if relatorio.ok:
+                return enriquecer_imagens(caderno, plano)
+            problemas = "; ".join(
+                f"atividade {p.atividade}: {p.motivo}"
+                for p in relatorio.problemas
+            )
+            ultimo_erro = ErroContrato(f"Verificador reprovou: {problemas}")
+            feedback.append(f"Corrija conforme o verificador: {problemas}")
         except (ErroContrato, ErroLLM, ValueError) as erro:
             ultimo_erro = erro
             feedback.append(str(erro))
@@ -122,33 +134,43 @@ def enriquecer_imagens(
 ) -> CadernoAtividades:
     """Gera no máximo IMAGE_MAX imagens por pacote, sem contar/letras."""
     if not image_service.disponivel():
-        return caderno
+        return caderno.model_copy(
+            update={"imagem_status": "Imagens desativadas (IMAGE_PROVIDER/chaves)."}
+        )
 
     try:
-        maximo = int(os.getenv("IMAGE_MAX") or "1")
+        maximo = int(os.getenv("IMAGE_MAX") or "5")
     except ValueError:
-        maximo = 1
-    maximo = max(0, min(maximo, 2))
+        maximo = 5
+    maximo = max(0, min(maximo, 5))
     if maximo == 0:
-        return caderno
+        return caderno.model_copy(
+            update={"imagem_status": "Geração de imagens desativada (IMAGE_MAX=0)."}
+        )
 
     candidatas = {
         atividade.numero
         for atividade in caderno.atividades
-        if atividade.imagem_alt
-        and atividade.tipo not in {"contar", "cobrir_palavra"}
-        and not atividade.imagem_base64
+        if not atividade.imagem_base64
     }
     if not candidatas:
-        return caderno
+        return caderno.model_copy(
+            update={"imagem_status": "Todas as atividades já têm imagem."}
+        )
 
     geradas = 0
+    falhas: list[str] = []
     atividades = []
     for atividade in caderno.atividades:
         if geradas < maximo and atividade.numero in candidatas:
             try:
+                assunto = (
+                    atividade.imagem_alt
+                    or atividade.titulo
+                    or plano.titulo
+                )
                 prompt = image_service.montar_prompt(
-                    atividade.imagem_alt,
+                    assunto,
                     plano.identificacao.tema,
                 )
                 imagem = image_service.gerar_imagem(prompt)
@@ -163,11 +185,23 @@ def enriquecer_imagens(
                     atividade.numero,
                     erro,
                 )
+                falhas.append(f"atividade {atividade.numero}: {erro}")
                 atividades.append(atividade)
         else:
             atividades.append(atividade)
 
-    return caderno.model_copy(update={"atividades": atividades})
+    if geradas and not falhas:
+        status = f"{geradas} imagem(ns) gerada(s)."
+    elif geradas:
+        status = f"{geradas} imagem(ns) gerada(s); falhas: " + "; ".join(falhas)
+    elif falhas:
+        status = "Nenhuma imagem gerada. " + "; ".join(falhas)
+    else:
+        status = "Nenhuma imagem gerada."
+
+    return caderno.model_copy(
+        update={"atividades": atividades, "imagem_status": status}
+    )
 
 
 def gerar_pacote(

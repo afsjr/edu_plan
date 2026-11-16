@@ -80,10 +80,12 @@ def test_render_caderno_pptx(tmp_path):
 
     assert "CADERNO DE ATIVIDADES" in textos[0]
     assert "Este é o meu nome!" in textos[1]
-    assert "🍍" in textos[3] and "ABACAXI" in textos[3]
+    assert "ABACAXI" in textos[3]
     assert "O caminho até a escola" in textos[5]
     assert "Nota para o professor" in textos[6]
     assert "EI03EO01" in textos[6] or "EI03EO04" in textos[6]
+    for proibido in ["🎨", "✏️", "🔤", "🔢", "🧩", "🏠", "🏫", "✨", "里", "□"]:
+        assert all(proibido not in texto for texto in textos)
 
 
 PNG_1X1 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="

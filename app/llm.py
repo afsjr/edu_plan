@@ -24,6 +24,7 @@ from app.contract import (
     AtividadeGerada,
     Avaliacao,
     BrincadeiraCasa,
+    CadernoAtividades,
     CadernoGerado,
     CampoExperienciaItem,
     CapaCaderno,
@@ -39,6 +40,7 @@ from app.contract import (
     PlanoAula,
     PlanoGerado,
     Recurso,
+    RelatorioVerificacao,
     SCHEMA_CADERNO,
     SCHEMA_PLANO,
     TIPOS_ATIVIDADE,
@@ -47,6 +49,7 @@ from app.contract import (
 RAIZ = Path(__file__).resolve().parents[1]
 PROMPT_PLANO = RAIZ / "prompts" / "system_plano.md"
 PROMPT_ATIVIDADES = RAIZ / "prompts" / "system_atividades.md"
+PROMPT_VERIFICADOR = RAIZ / "prompts" / "verificador.md"
 
 CAMPOS_OFICIAIS = [
     "O eu, o outro e o nós",
@@ -105,6 +108,12 @@ class LLMClient(Protocol):
         schema: dict,
         feedback: list[str] | None = None,
     ) -> CadernoGerado: ...
+
+    def verificar_atividades(
+        self,
+        plano: PlanoAula,
+        caderno: CadernoAtividades,
+    ) -> RelatorioVerificacao: ...
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +302,13 @@ class MockLLM:
             ),
         )
 
+    def verificar_atividades(
+        self,
+        plano: PlanoAula,
+        caderno: CadernoAtividades,
+    ) -> RelatorioVerificacao:
+        return RelatorioVerificacao(ok=True)
+
     def _imagem_alt(self, tipo: str) -> str:
         if tipo in {"contar", "cobrir_palavra"}:
             return ""
@@ -466,10 +482,17 @@ class OpenAICompativel:
         if not self.api_key:
             raise ErroLLM("LLM_API_KEY não configurada.")
 
-    def _chamar(self, system: str, user: str, schema: dict) -> str:
+    def _chamar(
+        self,
+        system: str,
+        user: str,
+        schema: dict,
+        modelo: str | None = None,
+        temperature: float = 0.3,
+    ) -> str:
         payload = {
-            "model": self.model,
-            "temperature": 0.3,
+            "model": modelo or self.model,
+            "temperature": temperature,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -523,7 +546,12 @@ class OpenAICompativel:
         user = _prompt_plano(requisicao, candidatos)
         if feedback:
             user += "\n\nCorrija os erros da tentativa anterior:\n- " + "\n- ".join(feedback)
-        conteudo = self._chamar(system, user, schema)
+        conteudo = self._chamar(
+            system,
+            user,
+            schema,
+            temperature=float(os.getenv("LLM_TEMPERATURE_PLANO") or "0.4"),
+        )
         try:
             return PlanoGerado.model_validate_json(_extrair_json(conteudo))
         except Exception as erro:
@@ -539,11 +567,43 @@ class OpenAICompativel:
         user = _prompt_atividades(plano)
         if feedback:
             user += "\n\nCorrija os erros da tentativa anterior:\n- " + "\n- ".join(feedback)
-        conteudo = self._chamar(system, user, schema)
+        conteudo = self._chamar(
+            system,
+            user,
+            schema,
+            temperature=float(os.getenv("LLM_TEMPERATURE_ATIVIDADES") or "0.8"),
+        )
         try:
             return CadernoGerado.model_validate_json(_extrair_json(conteudo))
         except Exception as erro:
             raise ErroLLM(f"Caderno inválido devolvido pelo provedor: {erro}") from erro
+
+    def verificar_atividades(
+        self,
+        plano: PlanoAula,
+        caderno: CadernoAtividades,
+    ) -> RelatorioVerificacao:
+        system = PROMPT_VERIFICADOR.read_text(encoding="utf-8")
+        user = json.dumps(
+            {
+                "plano": plano.model_dump(mode="json"),
+                "caderno": caderno.model_dump(mode="json"),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        schema = RelatorioVerificacao.model_json_schema()
+        conteudo = self._chamar(
+            system,
+            user,
+            schema,
+            modelo=os.getenv("VERIFIER_MODEL") or "gpt-4o-mini",
+            temperature=0,
+        )
+        try:
+            return RelatorioVerificacao.model_validate_json(_extrair_json(conteudo))
+        except Exception as erro:
+            raise ErroLLM(f"Relatório de verificação inválido: {erro}") from erro
 
 
 def obter_cliente() -> LLMClient:

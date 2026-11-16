@@ -60,6 +60,19 @@ Responda somente com JSON válido no schema `schema_caderno.json`.
    - `sugestoes_extras`: liste o que você acrescentou como sugestão, sem
      atribuir à BNCC.
 
+# Campo → tipo de atividade
+
+- `EO`: identidade, sentimentos, relações; prefira `desenhar`, `recortar_colar`,
+  `labirinto`.
+- `CG`: corpo, gestos e movimentos; prefira `labirinto`, `recortar_colar`,
+  `desenhar`. **Não use** `ligar` de palavras para este campo.
+- `TS`: arte, cores, formas, música; prefira `colorir`, `desenhar`,
+  `recortar_colar`.
+- `EF`: oralidade, letras e palavras; prefira `cobrir_palavra`, `ligar`,
+  `completar`.
+- `ET`: contagem, quantidades e sequências; prefira `contar`, `completar`,
+  `colorir` por número.
+
 # Conteúdo por tipo
 
 - `cobrir_palavra`: `texto_para_cobrir` (palavra curta) e `linhas_escrita`.

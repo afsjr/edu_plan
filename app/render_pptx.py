@@ -19,7 +19,6 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Cm, Pt
 
 from app.contract import Atividade, CadernoAtividades, ConteudoAtividade, ItemLegendaCor
-from app.icons import icone_para
 
 VERDE = "4CAF73"
 LARANJA = "F2683C"
@@ -306,7 +305,6 @@ def _conteudo_desenhar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
 
 
 def _conteudo_ligar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
-    _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Ligue cada desenho à letra com que o nome começa:", tamanho=11, negrito=True, cor=cor)
     pares = conteudo.pares or []
     if not pares:
         _texto(slide, MARGEM, 8.0, CONTEUDO, 2.0, "Sem pares informados.", tamanho=11, cor=CINZA_TEXTO)
@@ -318,9 +316,7 @@ def _conteudo_ligar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
     for indice, par in enumerate(pares[:limite]):
         y = inicio_y + indice * passo
         cartao = _forma(slide, MARGEM + 0.4, y, 7.2, 2.2, preenchimento=BRANCO, contorno=cor, espessura=1.5, arredondado=True)
-        icone = icone_para(par.palavra)
-        texto = f"{icone}  {par.palavra}" if icone else par.palavra
-        _texto_na_forma(cartao, texto, tamanho=13, negrito=True, cor=CINZA_ESCURO)
+        _texto_na_forma(cartao, par.palavra, tamanho=13, negrito=True, cor=CINZA_ESCURO)
         _circulo(slide, MARGEM + 7.9, y + 0.25, 0.55, cor)
 
         letra = _circulo(slide, LARGURA - MARGEM - 3.4, y + 0.15, 2.0, "FFF8E0", contorno=cor, espessura=1.8)
@@ -369,10 +365,10 @@ def _conteudo_labirinto(slide, conteudo: ConteudoAtividade, cor: str) -> None:
     fim = conteudo.rotulo_fim or "escola"
 
     casa = _forma(slide, MARGEM + 1.0, 7.6, 4.0, 3.2, preenchimento="FFF8E0", contorno=cor, espessura=1.75, arredondado=True)
-    _texto_na_forma(casa, f"🏠\n{inicio}", tamanho=10, negrito=True, cor=LARANJA)
+    _texto_na_forma(casa, inicio, tamanho=12, negrito=True, cor=LARANJA)
 
     escola = _forma(slide, LARGURA - MARGEM - 5.0, 20.6, 4.0, 3.2, preenchimento="EAF6FF", contorno=AZUL, espessura=1.75, arredondado=True)
-    _texto_na_forma(escola, f"🏫\n{fim}", tamanho=10, negrito=True, cor=AZUL_ESCURO)
+    _texto_na_forma(escola, fim, tamanho=12, negrito=True, cor=AZUL_ESCURO)
 
     pontos = [
         (MARGEM + 5.8, 8.2),
@@ -411,7 +407,6 @@ def _conteudo_generico(slide, conteudo: ConteudoAtividade, cor: str) -> None:
 
 def _conteudo_contar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
     quantidade = max(1, min(conteudo.quantidade or 5, 20))
-    icone = icone_para(conteudo.icone_chave or "bola")
     _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Conte os objetos e escreva o número:", tamanho=11, negrito=True, cor=cor)
 
     colunas = 5
@@ -424,8 +419,8 @@ def _conteudo_contar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
         linha = indice // colunas
         x = inicio_x + coluna * (tamanho + espaco)
         y = inicio_y + linha * (tamanho + espaco)
-        celula = _forma(slide, x, y, tamanho, tamanho, preenchimento=BRANCO, contorno=cor, espessura=1.0, arredondado=True)
-        _texto_na_forma(celula, icone, tamanho=22, cor=CINZA_ESCURO)
+        _forma(slide, x, y, tamanho, tamanho, preenchimento=BRANCO, contorno=cor, espessura=1.0, arredondado=True)
+        _circulo(slide, x + (tamanho - 1.2) / 2, y + (tamanho - 1.2) / 2, 1.2, cor)
 
     linhas = (quantidade + colunas - 1) // colunas
     y_resposta = inicio_y + linhas * (tamanho + espaco) + 1.0
@@ -522,8 +517,10 @@ def _capa(prs: Presentation, caderno: CadernoAtividades) -> None:
     _circulo(slide, LARGURA - 2.6, 7.9, 1.3, AMARELO)
 
     _texto(slide, MARGEM, 1.5, CONTEUDO, 1.0, "CADERNO DE ATIVIDADES", tamanho=11, negrito=True, cor=BRANCO)
-    _texto(slide, MARGEM, 3.0, CONTEUDO - 2.0, 3.4, caderno.capa.titulo, tamanho=30, negrito=True, cor=BRANCO)
-    _texto(slide, MARGEM, 6.8, CONTEUDO - 2.0, 1.2, caderno.capa.subtitulo, tamanho=13, cor=BRANCO)
+    titulo = caderno.capa.titulo
+    tamanho_titulo = 28 if len(titulo) <= 45 else 24 if len(titulo) <= 75 else 20
+    _texto(slide, MARGEM, 2.8, CONTEUDO - 2.0, 4.2, titulo, tamanho=tamanho_titulo, negrito=True, cor=BRANCO)
+    _texto(slide, MARGEM, 7.0, CONTEUDO - 2.0, 1.2, caderno.capa.subtitulo, tamanho=13, cor=BRANCO)
 
     _forma(slide, MARGEM, 11.0, CONTEUDO, 2.0, preenchimento=CINZA_CLARO, arredondado=True)
     _texto(slide, MARGEM + 0.4, 11.25, CONTEUDO - 0.8, 1.5, f"{caderno.capa.etapa}  •  {caderno.capa.faixa_etaria}  •  {caderno.capa.codigo_ancora}", tamanho=12, negrito=True, cor=CINZA_ESCURO)
@@ -531,12 +528,11 @@ def _capa(prs: Presentation, caderno: CadernoAtividades) -> None:
     selo = _forma(slide, MARGEM, 13.6, 8.2, 1.6, preenchimento="FFF8E0", contorno=AMARELO, arredondado=True)
     _texto_na_forma(selo, caderno.capa.alinhamento_bncc, tamanho=10, negrito=True, cor=LARANJA)
 
-    icones = ["✏️", "🔤", "🎨", "🔢", "🧩"]
-    for indice, icone in enumerate(icones):
+    for indice in range(5):
         x = MARGEM + indice * 3.5
         y = 18.0
         circulo = _circulo(slide, x, y, 2.8, CORES_ATIVIDADES[indice % len(CORES_ATIVIDADES)])
-        _texto_na_forma(circulo, icone, tamanho=20, negrito=False, cor=BRANCO)
+        _texto_na_forma(circulo, str(indice + 1), tamanho=20, negrito=True, cor=BRANCO)
 
     _texto(slide, MARGEM, 23.0, CONTEUDO, 1.0, f"{len(caderno.atividades)} atividades para imprimir em A4", tamanho=12, negrito=True, cor=AZUL_ESCURO)
     _texto(slide, MARGEM, 24.4, CONTEUDO, 1.6, "Material de apoio ao plano de aula. Revisar antes de aplicar.", tamanho=9, italico=True, cor=CINZA_TEXTO)

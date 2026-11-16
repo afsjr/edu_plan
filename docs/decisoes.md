@@ -54,8 +54,12 @@
 | D-028 | OpenAI gpt-4o para gerar e gpt-4o-mini para verificar | provisória |
 | D-029 | 8 tipos genéricos de atividade | aceita |
 | D-030 | Sanitização de ícones e texto fora do português | aceita |
-| D-031 | Imagem em runtime com Cloudflare, 1 por pacote | aceita |
+| D-031 | Imagem em runtime com Cloudflare, 1 por pacote | substituída por D-034 |
 | D-032 | Atividade aponta objetivo por índice; prompt sem descrição BNCC | aceita |
+| D-033 | Título curto, sem reticências, a partir da descrição oficial | aceita |
+| D-034 | 5 imagens por pacote, 512 px, ilustrativas | aceita |
+| D-035 | Atividades variam (temperatura 0.8) e botão de nova versão | aceita |
+| D-036 | Verificador semântico gpt-4o-mini + regra campo → tipo | aceita |
 
 ---
 
@@ -371,7 +375,7 @@
 - **Consequência:** imagem sem storage persistente; o JSON cresce ~100–250 KB;
   o download re-renderiza.
 - **Reabrir se:** o cliente quiser 2+ imagens, biblioteca estática ou Blob.
-- **Status:** aceita.
+- **Status:** substituída por D-034.
 
 ### D-032 — Atividade aponta objetivo por índice
 
@@ -382,6 +386,40 @@
   faltar, tenta um casamento aproximado com os objetivos do plano.
 - **Consequência:** atividades sempre ligadas a um objetivo do plano; menos 400.
 - **Reabrir se:** o modelo ainda errar o índice; nesse caso, usar IDs explícitos.
+- **Status:** aceita.
+
+### D-033 — Título curto sem reticências
+
+- **Contexto:** o título era um recorte com "…", o que soava amador.
+- **Decisão:** usar um trecho **completo** da descrição oficial (até uma vírgula/
+  ponto final), sem reticências; a descrição completa fica no plano.
+- **Consequência:** capa limpa e profissional; o título pode ter 2–3 linhas.
+- **Status:** aceita.
+
+### D-034 — 5 imagens por pacote
+
+- **Contexto:** o cliente quer uma imagem por atividade e não apenas no pacote.
+- **Decisão:** `IMAGE_MAX=5`, uma imagem por atividade, 512 px, JPEG comprimido,
+  base64 no JSON; imagem ilustrativa, nunca usada para contar/escrever.
+- **Consequência:** JSON/página ~1 MB; Cloudflare free (~46 pacotes/dia).
+- **Status:** aceita.
+
+### D-035 — Atividades variam
+
+- **Contexto:** com temperatura 0.3, o mesmo plano gerava as mesmas atividades.
+- **Decisão:** plano a 0.4 e atividades a 0.8; botão "Gerar outras atividades"
+  reaproveita o plano e gera uma nova versão.
+- **Consequência:** variação real; o professor pode comparar versões.
+- **Status:** aceita.
+
+### D-036 — Verificador semântico e regra campo → tipo
+
+- **Contexto:** uma atividade de ligar palavras foi usada para um objetivo de
+  corpo/movimento (`CG`), sem o validador perceber.
+- **Decisão:** regra explícita de campo → tipo no prompt; verificador
+  `gpt-4o-mini` com reparo automático; se o verificador falhar, segue o
+  determinístico.
+- **Consequência:** menos atividades desalinhadas; uma chamada extra de IA.
 - **Status:** aceita.
 
 ---
@@ -409,3 +447,4 @@
 | 2026-11-15 | Sanitização de ícones e rejeição de texto CJK (D-030). |
 | 2026-11-16 | Imagem em runtime com Cloudflare (D-031). |
 | 2026-11-16 | Objetivo por índice e prompt sem descrição BNCC (D-032). |
+| 2026-11-16 | Título curto, 5 imagens, variação e verificador (D-033 a D-036). |

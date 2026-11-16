@@ -93,10 +93,11 @@ houver suspeita de vazamento.
 - `app/image.py` com `gerar_imagem(prompt) -> base64`.
 - Variáveis: `IMAGE_PROVIDER=cloudflare`, `CLOUDFLARE_ACCOUNT_ID`,
   `CLOUDFLARE_API_TOKEN`.
-- Opcionais: `IMAGE_MAX=1` (padrão), `IMAGE_STEPS=4`, `IMAGE_MODEL`.
-- A imagem é gerada na etapa das atividades, **1 por pacote**, e vai em
-  `base64` no JSON do caderno. Sem Blob, sem disco.
-- Só para atividades de ilustração; **nunca** para contagem, letras ou sílabas.
+- Opcionais: `IMAGE_MAX=5` (padrão), `IMAGE_STEPS=4`, `IMAGE_MODEL`.
+- As imagens são geradas na etapa das atividades, **5 (uma por atividade)**,
+  comprimidas em 512 px e vão em `base64` no JSON do caderno. Sem Blob, sem disco.
+- A imagem é **ilustrativa**: a contagem e a escrita continuam em formas/texto
+  determinísticos. Nunca use a imagem para contar ou escrever.
 - O renderizador coloca a imagem no slide da atividade; se falhar, cai para
   ícone/emoji/formas.
 

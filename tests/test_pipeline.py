@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from app import storage
+from app.contract import ProblemaAtividade, RelatorioVerificacao
 from app.llm import MockLLM, RequisicaoGeracao
 from app.pipeline import gerar_e_salvar, gerar_pacote
 
@@ -45,3 +46,24 @@ def test_gerar_e_salvar(tmp_path, monkeypatch):
     assert registro is not None
     assert len(registro["codigos"]) == 7
     assert registro["tema"] == resultado["pacote"].plano.identificacao.tema
+
+
+class VerificadorUmaVez(MockLLM):
+    def __init__(self):
+        self.chamadas = 0
+
+    def verificar_atividades(self, plano, caderno):
+        self.chamadas += 1
+        if self.chamadas == 1:
+            return RelatorioVerificacao(
+                ok=False,
+                problemas=[ProblemaAtividade(atividade=1, motivo="teste")],
+            )
+        return RelatorioVerificacao(ok=True)
+
+
+def test_verificador_reprovacao_e_reparo():
+    cliente = VerificadorUmaVez()
+    pacote = gerar_pacote(_requisicao(), cliente=cliente)
+    assert cliente.chamadas == 2
+    assert len(pacote.caderno.atividades) == 5

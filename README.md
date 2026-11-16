@@ -25,8 +25,8 @@ Tudo sai em `.docx` e `.pptx` editáveis.
 5. Só depois da validação o sistema gera as **5 atividades** a partir do plano.
 6. O `.pptx` termina com a **nota de cobertura**: o que do plano não foi
    trabalhado e o que foi acrescentado como sugestão.
-7. Opcionalmente, **1 imagem do tema** é gerada via Cloudflare e entra no slide
-   da atividade, com fallback para ícone/emoji.
+7. **5 imagens** (uma por atividade) são geradas via Cloudflare e entram nos
+   slides, com fallback para ícone/emoji.
 
 ## Início rápido
 
@@ -59,8 +59,8 @@ alternativa gratuita; veja `docs/groq.md`.
 ### Imagem em runtime
 
 Com `IMAGE_PROVIDER=cloudflare` e as chaves `CLOUDFLARE_ACCOUNT_ID` /
-`CLOUDFLARE_API_TOKEN`, o sistema gera **1 imagem por pacote** (FLUX.1 Schnell),
-embutida em base64 no JSON do caderno. `IMAGE_MAX` controla o limite (padrão 1).
+`CLOUDFLARE_API_TOKEN`, o sistema gera **5 imagens** (uma por atividade, FLUX.1 Schnell), comprimidas
+em 512 px e embutidas em base64 no JSON do caderno. `IMAGE_MAX` controla o limite (padrão 5).
 Detalhes em `docs/cloudflare.md`.
 
 ## Deploy no Vercel
@@ -119,7 +119,7 @@ storage/         histórico local do CLI (não versionar)
 - O mock é estrutural: não mede qualidade pedagógica.
 - Sem PDF, login, pagamento ou multiusuário.
 - Os 8 tipos de atividade são templates genéricos; alguns temas vão precisar de ajuste.
-- A imagem em runtime é 1 por pacote e não é usada em contagem/letras.
+- A imagem em runtime é 1 por atividade; é ilustrativa, não usada para contar/escrever.
 - A biblioteca estática de PNG/SVG ainda não foi criada.
 
 ## Documentação

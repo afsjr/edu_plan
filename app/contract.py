@@ -432,12 +432,23 @@ class CadernoAtividades(BaseModel):
     capa: CapaCaderno
     atividades: list[Atividade]
     nota_cobertura: NotaCobertura = Field(default_factory=NotaCobertura)
+    imagem_status: str = ""
 
 
 class Pacote(BaseModel):
     plano: PlanoAula
     caderno: CadernoAtividades
     avisos: list[str] = Field(default_factory=list)
+
+
+class ProblemaAtividade(BaseModel):
+    atividade: int
+    motivo: str
+
+
+class RelatorioVerificacao(BaseModel):
+    ok: bool
+    problemas: list[ProblemaAtividade] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -469,12 +480,41 @@ def _resolver_habilidade(
     )
 
 
-def _titulo_verbatim(descricao: str, limite: int = 70) -> str:
-    texto = descricao.strip()
-    if len(texto) <= limite:
+STOPWORDS_FINAIS = {
+    "de", "da", "do", "das", "dos", "para", "por", "com", "sem", "e", "ou",
+    "que", "em", "no", "na", "nos", "nas", "o", "a", "os", "as", "ao", "aos",
+}
+
+
+def _titulo_curto(descricao: str, minimo: int = 30, maximo: int = 95) -> str:
+    """Trecho curto e completo da descrição oficial, sem reticências."""
+    texto = " ".join(descricao.split()).strip()
+    if not texto:
         return texto
-    corte = texto[:limite].rsplit(" ", 1)[0].rstrip(",.;:")
-    return corte + "…"
+
+    partes = re.split(r"[,;]", texto)
+    acumulado = ""
+    escolhido = ""
+    for parte in partes:
+        parte = parte.strip().strip(". ")
+        if not parte:
+            continue
+        acumulado = f"{acumulado}, {parte}" if acumulado else parte
+        if len(acumulado) < minimo:
+            continue
+        if acumulado.split()[-1].lower() in STOPWORDS_FINAIS:
+            continue
+        escolhido = acumulado
+        break
+
+    if not escolhido:
+        ponto = texto.find(".")
+        if 0 < ponto <= maximo:
+            escolhido = texto[:ponto].strip()
+    if not escolhido:
+        escolhido = texto
+
+    return escolhido
 
 
 def resolver_plano(
@@ -512,7 +552,7 @@ def resolver_plano(
     )
 
     plano = PlanoAula(
-        titulo=_titulo_verbatim(ancora_h.objetivo),
+        titulo=_titulo_curto(ancora_h.objetivo),
         subtitulo=gerado.subtitulo,
         identificacao=identificacao,
         campos_experiencia=campos,
@@ -584,6 +624,10 @@ def resolver_caderno(
     capa = gerado.capa.model_copy(
         update={
             "titulo": plano.titulo,
+            "subtitulo": "Caderno de Atividades",
+            "etapa": "Educação Infantil",
+            "faixa_etaria": plano.identificacao.faixa_etaria,
+            "alinhamento_bncc": "Alinhado à BNCC",
             "codigo_ancora": plano.identificacao.codigo_ancora,
         }
     )

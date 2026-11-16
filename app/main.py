@@ -132,6 +132,7 @@ def gerar_atividades_route(request: Request, plano_json: str = Form(...)):
         {
             "request": request,
             "plano": plano,
+            "plano_json": plano_json,
             "caderno": caderno,
             "caderno_json": caderno.model_dump_json(),
             "provedor": getattr(obter_cliente(), "nome", "desconhecido"),

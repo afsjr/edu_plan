@@ -6,10 +6,13 @@ disco persistente. Sem chave configurada, o sistema usa apenas ícones/emoji.
 
 from __future__ import annotations
 
+import base64
+import io
 import os
 import time
 
 import httpx
+from PIL import Image
 
 from app.config import carregar_env
 
@@ -85,4 +88,18 @@ def gerar_imagem(prompt: str) -> str:
     imagem = (dados.get("result") or {}).get("image")
     if not imagem or len(imagem) < 1000:
         raise ErroImagem("Cloudflare não retornou uma imagem válida.")
-    return imagem
+    return _comprimir(imagem)
+
+
+def _comprimir(imagem_base64: str) -> str:
+    """Reduz para 512 px e reencoda em JPEG para caber no JSON."""
+    try:
+        dados = base64.b64decode(imagem_base64)
+        with Image.open(io.BytesIO(dados)) as imagem:
+            imagem = imagem.convert("RGB")
+            imagem.thumbnail((512, 512))
+            buffer = io.BytesIO()
+            imagem.save(buffer, format="JPEG", quality=82, optimize=True)
+        return base64.b64encode(buffer.getvalue()).decode("ascii")
+    except Exception:
+        return imagem_base64

@@ -26,6 +26,8 @@ def test_resolve_exemplo(base, permitidos):
     assert len(pacote.caderno.atividades) == 5
     assert pacote.avisos == []
     assert pacote.plano.identificacao.codigo_ancora == "EI03EF01"
+    assert "…" not in pacote.plano.titulo
+    assert "..." not in pacote.plano.titulo
     assert pacote.plano.habilidades[0].descricao
     assert pacote.caderno.atividades[0].campo_experiencia
     nao_trabalhados = {

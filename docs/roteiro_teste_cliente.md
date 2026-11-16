@@ -36,7 +36,7 @@ gerado serve para a professora usar em sala.
 4. **Conferir as atividades**
    - Baixar o `.pptx` e abrir no PowerPoint.
    - Verificar:
-     - 5 atividades;
+     - 5 atividades e 5 imagens;
      - o código âncora aparece em pelo menos uma;
      - cada atividade mostra o objetivo do plano;
      - os tipos de atividade fazem sentido para o objetivo;
@@ -53,7 +53,7 @@ gerado serve para a professora usar em sala.
 - [ ] O plano tem as 10 seções.
 - [ ] O plano tem 7 códigos e 4 campos.
 - [ ] O professor valida antes de gerar o PPT.
-- [ ] O caderno tem 5 atividades e a nota de cobertura.
+- [ ] O caderno tem 5 atividades, 5 imagens e a nota de cobertura.
 - [ ] Os ícones/emoji são reconhecíveis para a faixa etária.
 - [ ] Os arquivos abrem no Word/PowerPoint e são editáveis.
 - [ ] O tempo de geração é aceitável.

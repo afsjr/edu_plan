@@ -50,6 +50,10 @@ def test_render_plano_docx(tmp_path):
     ]:
         assert termo in texto
 
+    for proibido in ["六", "里", "💡", "😊", "✔"]:
+        assert proibido not in texto
+    assert "Sigla" in texto
+
     assert len(documento.tables) >= 15
 
 

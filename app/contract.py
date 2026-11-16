@@ -11,12 +11,14 @@ escreve a descrição oficial da BNCC: ela é injetada a partir do CSV.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 from app.bncc import BaseBNCC, normalizar
+from app.icons import banco
 
 RAIZ = Path(__file__).resolve().parents[1]
 SCHEMA_PLANO = RAIZ / "prompts" / "schema_plano.json"
@@ -44,6 +46,126 @@ TIPOS_ATIVIDADE = [
     "labirinto",
     "recortar_colar",
 ]
+
+CJK_RE = re.compile(r"[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\ufffd\u25a1]")
+
+ICONES_CAMPOS = {
+    "O eu, o outro e o nós": "👥",
+    "Corpo, gestos e movimentos": "🏃",
+    "Traços, sons, cores e formas": "🎨",
+    "Escuta, fala, pensamento e imaginação": "📚",
+    "Espaços, tempos, quantidades, relações e transformações": "🔢",
+}
+
+ICONES_SEGUROS = {registro.emoji for registro in banco().registros()} | {
+    "🪪",
+    "📄",
+    "✏️",
+    "🖍️",
+    "✂️",
+    "🧩",
+    "📦",
+    "🎵",
+    "🚩",
+    "📚",
+    "🧴",
+    "📐",
+    "🎒",
+    "•",
+    "✨",
+}
+
+
+def _icone_seguro(valor: str) -> str:
+    valor = (valor or "").strip()
+    if not valor or CJK_RE.search(valor):
+        return "•"
+    if valor in ICONES_SEGUROS:
+        return valor
+    icone = banco().obter(valor)
+    if icone and icone.emoji:
+        return icone.emoji
+    return "•"
+
+
+def _checar_portugues(valor: str, campo: str) -> None:
+    if valor and CJK_RE.search(valor):
+        raise ErroContrato(
+            f"Texto fora do português do Brasil em {campo}: {valor[:80]!r}"
+        )
+
+
+def _validar_portugues_plano(gerado: PlanoGerado) -> None:
+    _checar_portugues(gerado.titulo, "plano.titulo")
+    _checar_portugues(gerado.subtitulo, "plano.subtitulo")
+    for nome in (
+        "tema",
+        "faixa_etaria",
+        "tempo_estimado",
+        "area_integradora",
+    ):
+        _checar_portugues(
+            getattr(gerado.identificacao, nome),
+            f"plano.identificacao.{nome}",
+        )
+    for indice, campo in enumerate(gerado.campos_experiencia):
+        _checar_portugues(campo.nome, f"plano.campos[{indice}].nome")
+        _checar_portugues(
+            campo.justificativa,
+            f"plano.campos[{indice}].justificativa",
+        )
+    for bloco in gerado.objetivos:
+        for item in bloco.itens:
+            _checar_portugues(item, "plano.objetivos")
+    for indice, recurso in enumerate(gerado.recursos):
+        _checar_portugues(recurso.descricao, f"plano.recursos[{indice}]")
+    for indice, momento in enumerate(gerado.desenvolvimento):
+        _checar_portugues(momento.titulo, f"plano.desenvolvimento[{indice}].titulo")
+        _checar_portugues(
+            momento.descricao,
+            f"plano.desenvolvimento[{indice}].descricao",
+        )
+    _checar_portugues(gerado.avaliacao.introducao, "plano.avaliacao.introducao")
+    for indice, indicador in enumerate(gerado.avaliacao.indicadores):
+        _checar_portugues(indicador.criterio, f"plano.avaliacao[{indice}].criterio")
+        _checar_portugues(indicador.pre_1, f"plano.avaliacao[{indice}].pre_1")
+        _checar_portugues(indicador.pre_2, f"plano.avaliacao[{indice}].pre_2")
+    for indice, adaptacao in enumerate(gerado.adaptacoes):
+        _checar_portugues(adaptacao, f"plano.adaptacoes[{indice}]")
+    _checar_portugues(gerado.dica, "plano.dica")
+    _checar_portugues(gerado.brincadeira_casa.titulo, "plano.brincadeira.titulo")
+    _checar_portugues(gerado.brincadeira_casa.descricao, "plano.brincadeira.descricao")
+    _checar_portugues(
+        gerado.brincadeira_casa.organizacao,
+        "plano.brincadeira.organizacao",
+    )
+
+
+def _validar_portugues_caderno(gerado: CadernoGerado) -> None:
+    _checar_portugues(gerado.capa.titulo, "caderno.capa.titulo")
+    _checar_portugues(gerado.capa.subtitulo, "caderno.capa.subtitulo")
+    _checar_portugues(gerado.capa.etapa, "caderno.capa.etapa")
+    _checar_portugues(gerado.capa.faixa_etaria, "caderno.capa.faixa_etaria")
+    for indice, atividade in enumerate(gerado.atividades):
+        _checar_portugues(atividade.titulo, f"caderno.atividades[{indice}].titulo")
+        _checar_portugues(
+            atividade.enunciado,
+            f"caderno.atividades[{indice}].enunciado",
+        )
+        _checar_portugues(
+            atividade.objetivo_relacionado,
+            f"caderno.atividades[{indice}].objetivo",
+        )
+        if atividade.gabarito:
+            _checar_portugues(atividade.gabarito, f"caderno.atividades[{indice}].gabarito")
+        for frase in atividade.conteudo.frases:
+            _checar_portugues(frase, f"caderno.atividades[{indice}].frases")
+        for par in atividade.conteudo.pares:
+            _checar_portugues(par.palavra, f"caderno.atividades[{indice}].pares")
+    for objetivo in gerado.nota_cobertura.objetivos_nao_trabalhados:
+        _checar_portugues(objetivo, "caderno.nota.objetivos")
+    for sugestao in gerado.nota_cobertura.sugestoes_extras:
+        _checar_portugues(sugestao, "caderno.nota.sugestoes")
 
 
 class ErroContrato(ValueError):
@@ -316,9 +438,20 @@ def resolver_plano(
     if ancora_h is None:
         raise CodigoBNCCInvalido(ancora, "identificacao.codigo_ancora", permitidos)
 
+    _validar_portugues_plano(gerado)
+
     habilidades = [
         _resolver_habilidade(item.codigo, base, permitidos, "plano.habilidades")
         for item in gerado.habilidades
+    ]
+
+    campos = [
+        campo.model_copy(update={"icone": ICONES_CAMPOS.get(campo.nome, "•")})
+        for campo in gerado.campos_experiencia
+    ]
+    recursos = [
+        recurso.model_copy(update={"icone": _icone_seguro(recurso.icone)})
+        for recurso in gerado.recursos
     ]
 
     identificacao = gerado.identificacao.model_copy(
@@ -333,10 +466,10 @@ def resolver_plano(
         titulo=_titulo_verbatim(ancora_h.objetivo),
         subtitulo=gerado.subtitulo,
         identificacao=identificacao,
-        campos_experiencia=gerado.campos_experiencia,
+        campos_experiencia=campos,
         objetivos=gerado.objetivos,
         habilidades=habilidades,
-        recursos=gerado.recursos,
+        recursos=recursos,
         desenvolvimento=gerado.desenvolvimento,
         avaliacao=gerado.avaliacao,
         adaptacoes=gerado.adaptacoes,
@@ -357,6 +490,8 @@ def resolver_caderno(
     plano: PlanoAula,
     base: BaseBNCC,
 ) -> CadernoAtividades:
+    _validar_portugues_caderno(gerado)
+
     plan_codes = {habilidade.codigo for habilidade in plano.habilidades}
 
     atividades: list[Atividade] = []

@@ -36,6 +36,14 @@ BRANCO = "FFFFFF"
 FONTE = "Arial"
 CORES_MOMENTOS = [ROSA, LARANJA, AMARELO, VERDE, ROXO, AZUL, VERDE, LARANJA]
 
+SIGLAS_CAMPOS = {
+    "O eu, o outro e o nós": "EO",
+    "Corpo, gestos e movimentos": "CG",
+    "Traços, sons, cores e formas": "TS",
+    "Escuta, fala, pensamento e imaginação": "EF",
+    "Espaços, tempos, quantidades, relações e transformações": "ET",
+}
+
 LARGURA_UTIL = 17.2  # cm, com margens de 1,9 cm em A4 (21 cm)
 
 
@@ -256,7 +264,7 @@ def _caixa_dica(doc, dica: str) -> None:
     celula = tabela.rows[0].cells[0]
     _sombra_celula(celula, "FFF8E0")
     _margens_celula(celula, topo=110, baixo=110, esquerda=160, direita=160)
-    _texto_celula(celula, f"💡  Dica: {dica}", tamanho=9, cor=LARANJA)
+    _texto_celula(celula, f"Dica: {dica}", tamanho=9, cor=LARANJA)
     doc.add_paragraph().paragraph_format.space_after = Pt(0)
 
 
@@ -268,7 +276,7 @@ def _caixa_brincadeira(doc, plano: PlanoAula) -> None:
     titulo = tabela.rows[0].cells[0]
     _sombra_celula(titulo, LARANJA)
     _margens_celula(titulo, topo=100, baixo=100, esquerda=160, direita=160)
-    _texto_celula(titulo, f"😊  Brincadeira: {brincadeira.titulo}", tamanho=10.5, negrito=True, cor=BRANCO)
+    _texto_celula(titulo, f"Brincadeira: {brincadeira.titulo}", tamanho=10.5, negrito=True, cor=BRANCO)
 
     corpo = tabela.rows[1].cells[0]
     _sombra_celula(corpo, "FFF6F2")
@@ -329,7 +337,7 @@ def _capa(doc, plano: PlanoAula) -> None:
     celula_selo = selo.rows[0].cells[0]
     _sombra_celula(celula_selo, "FFF8E0")
     _margens_celula(celula_selo, topo=80, baixo=80)
-    _texto_celula(celula_selo, "✔  Alinhado à BNCC 2018", tamanho=9, negrito=True, cor=LARANJA, alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
+    _texto_celula(celula_selo, "Alinhado à BNCC 2018", tamanho=9, negrito=True, cor=LARANJA, alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
 
     doc.add_page_break()
 
@@ -357,8 +365,11 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
     _secao(doc, "02", "Campos de experiência", "Este tema articula os campos previstos pela BNCC.", LARANJA)
     _tabela_dados(
         doc,
-        ["", "Campo de experiência", "Por que entra nesta aula"],
-        [[campo.icone, campo.nome, campo.justificativa] for campo in plano.campos_experiencia],
+        ["Sigla", "Campo de experiência", "Por que entra nesta aula"],
+        [
+            [SIGLAS_CAMPOS.get(campo.nome, "•"), campo.nome, campo.justificativa]
+            for campo in plano.campos_experiencia
+        ],
         [1.2, 6.2, LARGURA_UTIL - 7.4],
         LARANJA,
     )
@@ -380,7 +391,7 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
     _tabela_dados(
         doc,
         ["", "Material"],
-        [[recurso.icone, recurso.descricao] for recurso in plano.recursos],
+        [["•", recurso.descricao] for recurso in plano.recursos],
         [1.2, LARGURA_UTIL - 1.2],
         AZUL,
     )

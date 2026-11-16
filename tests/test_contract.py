@@ -66,3 +66,19 @@ def test_exportar_schema(tmp_path):
     conteudo = destino.read_text(encoding="utf-8")
     assert "PacoteGerado" in conteudo
     assert "codigo_bncc" in conteudo
+
+
+def test_icones_estranhos_sao_sanitizados(base, permitidos):
+    gerado = pacote_exemplo()
+    gerado.plano.campos_experiencia[0].icone = "六"
+    gerado.plano.recursos[0].icone = "里"
+    pacote = resolver_pacote(gerado, base, permitidos)
+    assert pacote.plano.campos_experiencia[0].icone == "👥"
+    assert pacote.plano.recursos[0].icone == "•"
+
+
+def test_texto_chines_rejeitado(base, permitidos):
+    gerado = pacote_exemplo()
+    gerado.plano.campos_experiencia[0].justificativa = "六 欄"
+    with pytest.raises(ErroContrato):
+        resolver_pacote(gerado, base, permitidos)

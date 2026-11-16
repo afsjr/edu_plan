@@ -55,6 +55,7 @@
 | D-029 | 8 tipos genéricos de atividade | aceita |
 | D-030 | Sanitização de ícones e texto fora do português | aceita |
 | D-031 | Imagem em runtime com Cloudflare, 1 por pacote | aceita |
+| D-032 | Atividade aponta objetivo por índice; prompt sem descrição BNCC | aceita |
 
 ---
 
@@ -372,6 +373,17 @@
 - **Reabrir se:** o cliente quiser 2+ imagens, biblioteca estática ou Blob.
 - **Status:** aceita.
 
+### D-032 — Atividade aponta objetivo por índice
+
+- **Contexto:** o modelo copiava a descrição da BNCC em `objetivo_relacionado`,
+  em vez de um objetivo do plano; a validação falhava e o reparo era acionado.
+- **Decisão:** o prompt das atividades não inclui as descrições da BNCC; cada
+  atividade preenche `objetivo_indice` (1 a 8). O resolvedor usa o índice e, se
+  faltar, tenta um casamento aproximado com os objetivos do plano.
+- **Consequência:** atividades sempre ligadas a um objetivo do plano; menos 400.
+- **Reabrir se:** o modelo ainda errar o índice; nesse caso, usar IDs explícitos.
+- **Status:** aceita.
+
 ---
 
 ## Nova decisão (modelo)
@@ -396,3 +408,4 @@
 | 2026-11-15 | Fluxo por código, duas etapas, 10 seções e nota de cobertura (D-024 a D-029). |
 | 2026-11-15 | Sanitização de ícones e rejeição de texto CJK (D-030). |
 | 2026-11-16 | Imagem em runtime com Cloudflare (D-031). |
+| 2026-11-16 | Objetivo por índice e prompt sem descrição BNCC (D-032). |

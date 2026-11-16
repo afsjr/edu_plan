@@ -152,6 +152,7 @@ def pacote_exemplo() -> PacoteGerado:
                     enunciado="Cubra as letrinhas pontilhadas e escreva o seu nome.",
                     tipo="cobrir_palavra",
                     codigo_bncc="EI03EF01",
+                    objetivo_indice=5,
                     objetivo_relacionado=OBJETIVOS_PRE_2[0],
                     conteudo=ConteudoAtividade(texto_para_cobrir="NOME", linhas_escrita=2),
                     gabarito="A criança pode usar o crachá como apoio.",
@@ -162,6 +163,7 @@ def pacote_exemplo() -> PacoteGerado:
                     enunciado="Desenhe o seu rostinho no espelho e pinte do seu jeito.",
                     tipo="desenhar",
                     codigo_bncc="EI03EO02",
+                    objetivo_indice=8,
                     objetivo_relacionado=OBJETIVOS_PRE_2[3],
                     conteudo=ConteudoAtividade(
                         frases=[
@@ -178,6 +180,7 @@ def pacote_exemplo() -> PacoteGerado:
                     enunciado="Ligue cada desenho à letra com que o nome começa.",
                     tipo="ligar",
                     codigo_bncc="EI03EF09",
+                    objetivo_indice=2,
                     objetivo_relacionado=OBJETIVOS_PRE_1[1],
                     conteudo=ConteudoAtividade(
                         pares=[
@@ -195,6 +198,7 @@ def pacote_exemplo() -> PacoteGerado:
                     enunciado="Pinte cada espaço seguindo a cor de cada número.",
                     tipo="colorir",
                     codigo_bncc="EI03TS02",
+                    objetivo_indice=6,
                     objetivo_relacionado=OBJETIVOS_PRE_2[1],
                     conteudo=ConteudoAtividade(
                         legenda_cores=[
@@ -211,6 +215,7 @@ def pacote_exemplo() -> PacoteGerado:
                     enunciado="Ajude a criança a chegar na escola seguindo o caminho.",
                     tipo="labirinto",
                     codigo_bncc="EI03CG05",
+                    objetivo_indice=3,
                     objetivo_relacionado=OBJETIVOS_PRE_1[2],
                     conteudo=ConteudoAtividade(rotulo_inicio="início", rotulo_fim="escola"),
                 ),

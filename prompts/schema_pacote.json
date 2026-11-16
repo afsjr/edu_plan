@@ -35,8 +35,16 @@
           "title": "Codigo Bncc",
           "type": "string"
         },
+        "objetivo_indice": {
+          "description": "Índice do objetivo do plano (1 a 8)",
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Objetivo Indice",
+          "type": "integer"
+        },
         "objetivo_relacionado": {
-          "description": "Objetivo do plano, copiado verbatim",
+          "default": "",
+          "description": "Objetivo do plano; o sistema também aceita o índice",
           "title": "Objetivo Relacionado",
           "type": "string"
         },
@@ -81,7 +89,7 @@
         "enunciado",
         "tipo",
         "codigo_bncc",
-        "objetivo_relacionado"
+        "objetivo_indice"
       ],
       "title": "AtividadeGerada",
       "type": "object"

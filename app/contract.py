@@ -328,8 +328,14 @@ class AtividadeGerada(BaseModel):
     enunciado: str
     tipo: TipoAtividade
     codigo_bncc: str = Field(description="Código existente no plano")
+    objetivo_indice: int = Field(
+        ge=1,
+        le=8,
+        description="Índice do objetivo do plano (1 a 8)",
+    )
     objetivo_relacionado: str = Field(
-        description="Objetivo do plano, copiado verbatim"
+        default="",
+        description="Objetivo do plano; o sistema também aceita o índice",
     )
     imagem_chave: str | None = Field(
         default=None,
@@ -437,6 +443,12 @@ class Pacote(BaseModel):
 # ---------------------------------------------------------------------------
 # Resolução e validação
 # ---------------------------------------------------------------------------
+
+
+def _resolver_objetivo(item: AtividadeGerada, objetivos: list[str]) -> str:
+    if item.objetivo_indice and 1 <= item.objetivo_indice <= len(objetivos):
+        return objetivos[item.objetivo_indice - 1]
+    return _mapear_objetivo(item.objetivo_relacionado, objetivos)
 
 
 def _resolver_habilidade(
@@ -548,9 +560,7 @@ def resolver_caderno(
                 codigo_bncc=resolvida.codigo,
                 campo_experiencia=resolvida.campo_experiencia,
                 descricao_bncc=resolvida.descricao,
-                objetivo_relacionado=_mapear_objetivo(
-                    item.objetivo_relacionado, objetivos_plano
-                ),
+                objetivo_relacionado=_resolver_objetivo(item, objetivos_plano),
                 imagem_chave=item.imagem_chave,
                 imagem_alt=item.imagem_alt,
                 conteudo=item.conteudo,

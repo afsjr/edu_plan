@@ -11,7 +11,7 @@
 - **Vercel:** projeto `plano-aula-bncc`, time `adelinos-projects`, CLI logado como `afsjr`
 - **Provedor ativo:** `openai-compativel` (`LLM_MODEL=gpt-4o`); o selo na home confirma
 - **Imagem:** Cloudflare FLUX, 1 por pacote, base64 no JSON
-- **Testes:** 38 passando
+- **Testes:** 41 passando
 
 ## O que está funcionando
 

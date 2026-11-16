@@ -16,8 +16,10 @@ desse plano**.
 - Use apenas códigos que estejam no plano validado.
 - Não invente códigos, descrições ou habilidades da BNCC.
 - O código âncora do plano deve aparecer em pelo menos uma atividade.
-- Cada atividade deve copiar **verbatim** um dos objetivos do plano no campo
-  `objetivo_relacionado`.
+- Cada atividade deve apontar para um dos objetivos do plano pelo campo
+  `objetivo_indice` (1 a 8). Não copie a descrição da BNCC nem o tema.
+- O campo `objetivo_relacionado` pode ficar vazio; o sistema resolve pelo
+  índice.
 - O texto pedagógico (título, enunciado, conteúdo) é seu, mas não pode
   atribuir à BNCC nada que não esteja no plano.
 - A imagem de apoio não pode ter texto, letras ou números dentro dela.
@@ -28,8 +30,10 @@ desse plano**.
 Você recebe o plano validado em JSON, com:
 
 - o código âncora;
-- os 7 códigos do plano, com descrição oficial;
-- os objetivos divididos em Pré I e Pré II.
+- os 7 códigos do plano (apenas códigos, sem descrição para copiar);
+- os objetivos numerados de 1 a 8, divididos em Pré I e Pré II.
+
+Use o índice do objetivo. Não copie `tema` nem descrição da BNCC.
 
 # Caderno
 
@@ -39,8 +43,10 @@ Responda somente com JSON válido no schema `schema_caderno.json`.
    faixa_etaria, alinhamento_bncc e codigo_ancora.
 2. `atividades`: exatamente **5 atividades**, numeradas de 1 a 5.
    - Cada uma tem `titulo`, `enunciado` (uma frase no imperativo), `tipo`,
-     `codigo_bncc`, `objetivo_relacionado`, `conteudo`, `imagem_alt` e
+     `codigo_bncc`, `objetivo_indice`, `conteudo`, `imagem_alt` e
      `gabarito` opcional.
+   - `objetivo_indice`: índice (1 a 8) de um dos `objetivos` do plano.
+   - `objetivo_relacionado`: deixe vazio; o sistema resolve pelo índice.
    - `imagem_alt`: descrição curta em português do objeto/cena que ilustraria
      a atividade. Deixe vazio para contagem, letras ou palavras.
    - `imagem_chave`: opcional; use apenas uma chave da biblioteca de ícones.

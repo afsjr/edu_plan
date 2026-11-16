@@ -93,3 +93,35 @@ def test_objetivo_parafraseado_e_mapeado(base, permitidos):
     assert pacote.caderno.atividades[0].objetivo_relacionado.startswith(
         "Escrever o próprio nome de forma autônoma"
     )
+
+
+def test_objetivo_indice_vence_texto(base, permitidos):
+    gerado = pacote_exemplo()
+    gerado.caderno.atividades[0].objetivo_indice = 2
+    gerado.caderno.atividades[0].objetivo_relacionado = "texto errado"
+    pacote = resolver_pacote(gerado, base, permitidos)
+    assert pacote.caderno.atividades[0].objetivo_relacionado == (
+        "Identificar a letra inicial do próprio nome e associá-la ao seu som."
+    )
+
+
+def test_prompt_atividades_sem_descricao_bncc(base, permitidos):
+    from app.llm import _prompt_atividades
+
+    pacote = resolver_pacote(pacote_exemplo(), base, permitidos)
+    prompt = _prompt_atividades(pacote.plano)
+    assert pacote.plano.habilidades[0].descricao not in prompt
+    assert pacote.plano.objetivos[0].itens[0] in prompt
+    assert "objetivo_indice" in prompt
+
+
+def test_mapear_objetivo_parafraseado():
+    from app.contract import _mapear_objetivo
+
+    objetivo = (
+        "Escrever o próprio nome de forma autônoma, respeitando a ordem das letras."
+    )
+    assert (
+        _mapear_objetivo("Escrever o próprio nome de forma autônoma.", [objetivo])
+        == objetivo
+    )

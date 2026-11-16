@@ -261,6 +261,7 @@ class MockLLM:
                     enunciado=enunciado,
                     tipo=tipo,
                     codigo_bncc=codigo,
+                    objetivo_indice=(indice - 1) % len(objetivos) + 1,
                     objetivo_relacionado=objetivos[(indice - 1) % len(objetivos)],
                     imagem_chave=self._imagem_chave(tipo),
                     imagem_alt=self._imagem_alt(tipo),
@@ -419,13 +420,32 @@ def _prompt_plano(requisicao: RequisicaoGeracao, candidatos: list[Habilidade]) -
 
 
 def _prompt_atividades(plano: PlanoAula) -> str:
+    objetivos = []
+    indice = 1
+    for bloco in plano.objetivos:
+        for texto in bloco.itens:
+            objetivos.append({"indice": indice, "ano": bloco.ano, "texto": texto})
+            indice += 1
+
+    payload = {
+        "codigo_ancora": plano.identificacao.codigo_ancora,
+        "titulo": plano.titulo,
+        "tema": plano.identificacao.tema,
+        "turmas": plano.identificacao.turmas,
+        "objetivos": objetivos,
+        "habilidades": [{"codigo": h.codigo} for h in plano.habilidades],
+        "campos_experiencia": [{"nome": c.nome} for c in plano.campos_experiencia],
+    }
+
     return (
         "Plano validado pelo professor:\n"
-        f"{plano.model_dump_json(indent=2)}\n\n"
+        f"{json.dumps(payload, ensure_ascii=False, indent=2)}\n\n"
         "Gere exatamente 5 atividades. O código âncora precisa estar em pelo menos "
-        "uma delas. Use apenas códigos do plano. Copie o objetivo relacionado "
-        "verbatim de um dos objetivos do plano. Liste na nota o que não foi "
-        "trabalhado e o que é sugestão extra."
+        "uma delas. Use apenas os códigos de `habilidades`. Para cada atividade, "
+        "preencha `objetivo_indice` com o índice de um dos objetivos do plano "
+        "(1 a 8). Não copie a descrição da BNCC em `objetivo_relacionado`; o "
+        "sistema usa o índice. Liste na nota o que não foi trabalhado e o que é "
+        "sugestão extra."
     )
 
 

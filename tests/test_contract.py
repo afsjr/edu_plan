@@ -82,3 +82,14 @@ def test_texto_chines_rejeitado(base, permitidos):
     gerado.plano.campos_experiencia[0].justificativa = "六 欄"
     with pytest.raises(ErroContrato):
         resolver_pacote(gerado, base, permitidos)
+
+
+def test_objetivo_parafraseado_e_mapeado(base, permitidos):
+    gerado = pacote_exemplo()
+    gerado.caderno.atividades[0].objetivo_relacionado = (
+        "Escrever o próprio nome de forma autônoma."
+    )
+    pacote = resolver_pacote(gerado, base, permitidos)
+    assert pacote.caderno.atividades[0].objetivo_relacionado.startswith(
+        "Escrever o próprio nome de forma autônoma"
+    )

@@ -43,7 +43,7 @@ OpenAI está implementado, mas ainda **não foi exercitado** neste ambiente.
 | `prompts/system_atividades.md` | Prompt da etapa das atividades |
 | `prompts/schema_plano.json` | Schema da etapa do plano |
 | `prompts/schema_caderno.json` | Schema da etapa das atividades |
-| `tests/` | 37 testes automatizados |
+| `tests/` | 38 testes automatizados |
 | `docs/` | Estado, decisões, escopo, teste, questionário e provedores |
 
 ## Números atuais

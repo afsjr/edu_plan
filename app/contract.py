@@ -10,6 +10,7 @@ escreve a descrição oficial da BNCC: ela é injetada a partir do CSV.
 
 from __future__ import annotations
 
+import difflib
 import json
 import re
 from pathlib import Path
@@ -86,6 +87,27 @@ def _icone_seguro(valor: str) -> str:
     if icone and icone.emoji:
         return icone.emoji
     return "•"
+
+
+def _mapear_objetivo(texto: str, objetivos: list[str]) -> str:
+    if not objetivos:
+        raise ErroContrato("O plano não tem objetivos para relacionar.")
+    alvo = normalizar(texto)
+    for objetivo in objetivos:
+        if normalizar(objetivo) == alvo:
+            return objetivo
+    melhor = max(
+        objetivos,
+        key=lambda objetivo: difflib.SequenceMatcher(
+            None, alvo, normalizar(objetivo)
+        ).ratio(),
+    )
+    similaridade = difflib.SequenceMatcher(None, alvo, normalizar(melhor)).ratio()
+    if similaridade < 0.72:
+        raise ErroContrato(
+            f"Objetivo da atividade não pertence ao plano: {texto[:80]!r}"
+        )
+    return melhor
 
 
 def _checar_portugues(valor: str, campo: str) -> None:
@@ -508,6 +530,7 @@ def resolver_caderno(
     _validar_portugues_caderno(gerado)
 
     plan_codes = {habilidade.codigo for habilidade in plano.habilidades}
+    objetivos_plano = [item for bloco in plano.objetivos for item in bloco.itens]
 
     atividades: list[Atividade] = []
     for item in gerado.atividades:
@@ -525,7 +548,9 @@ def resolver_caderno(
                 codigo_bncc=resolvida.codigo,
                 campo_experiencia=resolvida.campo_experiencia,
                 descricao_bncc=resolvida.descricao,
-                objetivo_relacionado=item.objetivo_relacionado,
+                objetivo_relacionado=_mapear_objetivo(
+                    item.objetivo_relacionado, objetivos_plano
+                ),
                 imagem_chave=item.imagem_chave,
                 imagem_alt=item.imagem_alt,
                 conteudo=item.conteudo,

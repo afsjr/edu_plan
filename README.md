@@ -115,6 +115,7 @@ storage/         histórico local do CLI (não versionar)
 
 ## Documentação
 
+- [`docs/handoff.md`](docs/handoff.md) — passagem de sessão e próximos passos.
 - [`docs/estado_atual.md`](docs/estado_atual.md) — snapshot técnico.
 - [`docs/decisoes.md`](docs/decisoes.md) — decisões e porquês.
 - [`docs/escopo_mvp.md`](docs/escopo_mvp.md) — o que entra e o que não entra.

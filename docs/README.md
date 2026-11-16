@@ -5,17 +5,19 @@ o trabalho sem depender do histórico do chat.
 
 ## Por onde começar
 
-1. **`estado_atual.md`** — o que existe hoje, números, comandos e limitações.
-2. **`decisoes.md`** — por que o sistema é assim e o que faria uma decisão mudar.
-3. **`escopo_mvp.md`** — o que está dentro e fora do MVP.
-4. **`roteiro_teste_cliente.md`** — como conduzir o teste com a professora.
-5. **`questionario_cliente.md`** — consulta ao cliente, **separada do MVP**.
-6. **`vercel.md`**, **`groq.md`**, **`cloudflare.md`** — deploy e provedores.
+1. **`handoff.md`** — passagem de sessão: onde paramos e o que fazer agora.
+2. **`estado_atual.md`** — o que existe hoje, números, comandos e limitações.
+3. **`decisoes.md`** — por que o sistema é assim e o que faria uma decisão mudar.
+4. **`escopo_mvp.md`** — o que está dentro e fora do MVP.
+5. **`roteiro_teste_cliente.md`** — como conduzir o teste com a professora.
+6. **`questionario_cliente.md`** — consulta ao cliente, **separada do MVP**.
+7. **`vercel.md`**, **`groq.md`**, **`cloudflare.md`** — deploy e provedores.
 
 ## O que cada documento responde
 
 | Documento | Pergunta que responde | Quando atualizar |
 |---|---|---|
+| `handoff.md` | Onde paramos e como retomar? | Ao encerrar uma sessão |
 | `estado_atual.md` | O que já está pronto e como rodar? | Depois de cada incremento |
 | `decisoes.md` | Por que escolhemos isso? | A cada decisão nova ou reaberta |
 | `escopo_mvp.md` | O que entra e o que não entra? | Quando o escopo mudar |

@@ -433,6 +433,7 @@ class CadernoAtividades(BaseModel):
     atividades: list[Atividade]
     nota_cobertura: NotaCobertura = Field(default_factory=NotaCobertura)
     imagem_status: str = ""
+    avisos_qualidade: list[str] = Field(default_factory=list)
 
 
 class Pacote(BaseModel):

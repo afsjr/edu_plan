@@ -67,3 +67,17 @@ def test_verificador_reprovacao_e_reparo():
     pacote = gerar_pacote(_requisicao(), cliente=cliente)
     assert cliente.chamadas == 2
     assert len(pacote.caderno.atividades) == 5
+
+
+class VerificadorSempreReprova(MockLLM):
+    def verificar_atividades(self, plano, caderno):
+        return RelatorioVerificacao(
+            ok=False,
+            problemas=[ProblemaAtividade(atividade=1, motivo="teste")],
+        )
+
+
+def test_verificador_entrega_com_avisos():
+    pacote = gerar_pacote(_requisicao(), cliente=VerificadorSempreReprova())
+    assert pacote.caderno.avisos_qualidade
+    assert len(pacote.caderno.atividades) == 5

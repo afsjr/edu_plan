@@ -34,6 +34,15 @@
 <div class="aviso-leve"><strong>Imagens:</strong> {{ caderno.imagem_status }}</div>
 {% endif %}
 
+{% if caderno.avisos_qualidade %}
+<div class="alerta leve">
+  <strong>Pontos de atenção do verificador:</strong>
+  <ul>
+    {% for aviso in caderno.avisos_qualidade %}<li>{{ aviso }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 <section class="cartao">
   <h2>Atividades</h2>
   <ol class="atividades">

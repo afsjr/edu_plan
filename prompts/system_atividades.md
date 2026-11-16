@@ -73,6 +73,15 @@ Responda somente com JSON válido no schema `schema_caderno.json`.
 - `ET`: contagem, quantidades e sequências; prefira `contar`, `completar`,
   `colorir` por número.
 
+Exemplos de alinhamento:
+
+- Objetivo de independência/confiança (`EO`): desenhar uma situação em que a
+  criança fez algo sozinha; não use completar sequência.
+- Objetivo de expressar sentimentos pelo corpo (`CG`): desenhar um corpo ou
+  rosto expressando o sentimento; não use labirinto.
+- Objetivo de contagem (`ET`): contar objetos. Objetivo de letras (`EF`): cobrir
+  ou ligar palavras.
+
 # Conteúdo por tipo
 
 - `cobrir_palavra`: `texto_para_cobrir` (palavra curta) e `linhas_escrita`.

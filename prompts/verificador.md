@@ -14,9 +14,11 @@ Para cada atividade:
    ligar palavras.
 2. **Compatibilidade com o campo da BNCC**:
    - `EO` (O eu, o outro e o nós): identidade, sentimentos, relações; desenhar,
-     recortar, labirinto.
+     recortar, labirinto. Objetivo de independência/confiança não é exercitado
+     por completar sequência; exija desenho de uma situação de autonomia.
    - `CG` (Corpo, gestos e movimentos): corpo/movimento/coordenação; labirinto,
-     recortar, desenhar. **Não** usar ligar de palavras.
+     recortar, desenhar. **Não** usar ligar de palavras. Se o objetivo for
+     expressar sentimentos, exija desenho/mímica/teatro, não labirinto.
    - `TS` (Traços, sons, cores e formas): arte, cores, formas, música; colorir,
      desenhar, recortar.
    - `EF` (Escuta, fala, pensamento e imaginação): oralidade, letras, palavras;

@@ -97,6 +97,8 @@ def gerar_atividades(
     _, schema_caderno = _schemas()
     feedback: list[str] = []
     ultimo_erro: Exception | None = None
+    ultimo_caderno: CadernoAtividades | None = None
+    ultimos_problemas: list[str] = []
 
     for _ in range(3):
         try:
@@ -106,6 +108,7 @@ def gerar_atividades(
                 feedback=feedback,
             )
             caderno = resolver_caderno(gerado, plano, base)
+            ultimo_caderno = caderno
             try:
                 relatorio = cliente.verificar_atividades(plano, caderno)
             except ErroLLM as erro:
@@ -113,15 +116,28 @@ def gerar_atividades(
                 return enriquecer_imagens(caderno, plano)
             if relatorio.ok:
                 return enriquecer_imagens(caderno, plano)
-            problemas = "; ".join(
-                f"atividade {p.atividade}: {p.motivo}"
+            ultimos_problemas = [
+                f"Atividade {p.atividade}: {p.motivo}"
                 for p in relatorio.problemas
-            )
+            ]
+            problemas = "; ".join(ultimos_problemas)
             ultimo_erro = ErroContrato(f"Verificador reprovou: {problemas}")
             feedback.append(f"Corrija conforme o verificador: {problemas}")
         except (ErroContrato, ErroLLM, ValueError) as erro:
             ultimo_erro = erro
             feedback.append(str(erro))
+
+    if ultimo_caderno is not None:
+        logger.warning(
+            "Entregando com avisos do verificador: %s",
+            "; ".join(ultimos_problemas),
+        )
+        return enriquecer_imagens(
+            ultimo_caderno.model_copy(
+                update={"avisos_qualidade": ultimos_problemas}
+            ),
+            plano,
+        )
 
     raise ErroContrato(
         f"Não foi possível gerar atividades válidas após 3 tentativas: {ultimo_erro}"

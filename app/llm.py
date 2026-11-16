@@ -96,12 +96,14 @@ class LLMClient(Protocol):
         requisicao: RequisicaoGeracao,
         candidatos: list[Habilidade],
         schema: dict,
+        feedback: list[str] | None = None,
     ) -> PlanoGerado: ...
 
     def gerar_atividades(
         self,
         plano: PlanoAula,
         schema: dict,
+        feedback: list[str] | None = None,
     ) -> CadernoGerado: ...
 
 
@@ -171,6 +173,7 @@ class MockLLM:
         requisicao: RequisicaoGeracao,
         candidatos: list[Habilidade],
         schema: dict,
+        feedback: list[str] | None = None,
     ) -> PlanoGerado:
         ancora = next(
             (h for h in candidatos if h.codigo == requisicao.codigo_ancora),
@@ -233,7 +236,12 @@ class MockLLM:
             ),
         )
 
-    def gerar_atividades(self, plano: PlanoAula, schema: dict) -> CadernoGerado:
+    def gerar_atividades(
+        self,
+        plano: PlanoAula,
+        schema: dict,
+        feedback: list[str] | None = None,
+    ) -> CadernoGerado:
         codigos = [h.codigo for h in plano.habilidades]
         ancora = plano.identificacao.codigo_ancora
         if ancora in codigos:
@@ -463,18 +471,28 @@ class OpenAICompativel:
         requisicao: RequisicaoGeracao,
         candidatos: list[Habilidade],
         schema: dict,
+        feedback: list[str] | None = None,
     ) -> PlanoGerado:
         system = PROMPT_PLANO.read_text(encoding="utf-8")
         user = _prompt_plano(requisicao, candidatos)
+        if feedback:
+            user += "\n\nCorrija os erros da tentativa anterior:\n- " + "\n- ".join(feedback)
         conteudo = self._chamar(system, user, schema)
         try:
             return PlanoGerado.model_validate_json(_extrair_json(conteudo))
         except Exception as erro:
             raise ErroLLM(f"Plano inválido devolvido pelo provedor: {erro}") from erro
 
-    def gerar_atividades(self, plano: PlanoAula, schema: dict) -> CadernoGerado:
+    def gerar_atividades(
+        self,
+        plano: PlanoAula,
+        schema: dict,
+        feedback: list[str] | None = None,
+    ) -> CadernoGerado:
         system = PROMPT_ATIVIDADES.read_text(encoding="utf-8")
         user = _prompt_atividades(plano)
+        if feedback:
+            user += "\n\nCorrija os erros da tentativa anterior:\n- " + "\n- ".join(feedback)
         conteudo = self._chamar(system, user, schema)
         try:
             return CadernoGerado.model_validate_json(_extrair_json(conteudo))

@@ -25,7 +25,7 @@ from app.contract import (
     resolver_plano,
     validar_plano,
 )
-from app.llm import LLMClient, RequisicaoGeracao, obter_cliente
+from app.llm import ErroLLM, LLMClient, RequisicaoGeracao, obter_cliente
 from app.render_docx import render_plano
 from app.render_pptx import render_caderno
 
@@ -61,9 +61,26 @@ def gerar_plano(
         )
 
     schema_plano, _ = _schemas()
-    gerado = cliente.gerar_plano(requisicao, candidatos, schema_plano)
     permitidos = {habilidade.codigo for habilidade in candidatos}
-    return resolver_plano(gerado, base, permitidos, requisicao.codigo_ancora)
+    feedback: list[str] = []
+    ultimo_erro: Exception | None = None
+
+    for _ in range(3):
+        try:
+            gerado = cliente.gerar_plano(
+                requisicao,
+                candidatos,
+                schema_plano,
+                feedback=feedback,
+            )
+            return resolver_plano(gerado, base, permitidos, requisicao.codigo_ancora)
+        except (ErroContrato, ErroLLM, ValueError) as erro:
+            ultimo_erro = erro
+            feedback.append(str(erro))
+
+    raise ErroContrato(
+        f"Não foi possível gerar um plano válido após 3 tentativas: {ultimo_erro}"
+    )
 
 
 def gerar_atividades(
@@ -73,8 +90,24 @@ def gerar_atividades(
     base = BaseBNCC()
     cliente = cliente or obter_cliente()
     _, schema_caderno = _schemas()
-    gerado = cliente.gerar_atividades(plano, schema_caderno)
-    return resolver_caderno(gerado, plano, base)
+    feedback: list[str] = []
+    ultimo_erro: Exception | None = None
+
+    for _ in range(3):
+        try:
+            gerado = cliente.gerar_atividades(
+                plano,
+                schema_caderno,
+                feedback=feedback,
+            )
+            return resolver_caderno(gerado, plano, base)
+        except (ErroContrato, ErroLLM, ValueError) as erro:
+            ultimo_erro = erro
+            feedback.append(str(erro))
+
+    raise ErroContrato(
+        f"Não foi possível gerar atividades válidas após 3 tentativas: {ultimo_erro}"
+    )
 
 
 def gerar_pacote(

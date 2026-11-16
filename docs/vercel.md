@@ -1,34 +1,34 @@
-# Deploy no Vercel — modo demonstração
+# Deploy no Vercel — fluxo em duas etapas
 
-> Objetivo: colocar o MVP em uma URL pública para o cliente validar o caminho.
-> Nesta fase **não há histórico** e o download vem em um ZIP com o plano
-> `.docx` e o caderno `.pptx`. Imagem em runtime fica para depois.
+> O fluxo é **sem estado**: o plano JSON fica no formulário entre as etapas; os
+> downloads são re-renderizados a partir do JSON. Não há SQLite, Blob nem disco
+> persistente.
 
-## Como o modo demo funciona
+## Como funciona
 
-- `VERCEL_DEMO=1` ativa o modo.
-- `POST /gerar` monta os dois arquivos em `/tmp`, compacta em ZIP e devolve no
-  mesmo request.
-- `/historico`, `/resultado` e `/download` ficam desativados.
-- `/bncc` e `/saude` continuam funcionando.
-- Sem Blob, sem Postgres, sem disco persistente.
+1. `POST /gerar-plano` gera o plano e devolve a página do plano.
+2. O plano JSON vai num campo oculto do formulário.
+3. `POST /gerar-atividades` recebe o plano JSON e devolve as atividades.
+4. `POST /baixar-plano` e `POST /baixar-atividades` renderizam os arquivos a
+   partir do JSON e devolvem o `.docx`/`.pptx` na hora.
+
+O professor só vê o botão de atividades depois de validar o plano.
 
 ## Arquivos de deploy
 
 - `pyproject.toml` — dependências de runtime e entrypoint `app.main:app`.
-- `vercel.json` — `maxDuration` de 300s e exclusão de arquivos desnecessários.
-- `.vercelignore` — impede o envio dos modelos do cliente, `storage/` e docs.
-- `requirements.txt` — dependências de runtime.
-- `requirements-dev.txt` — dependências locais (`pymupdf`, `pytest`, `uvicorn`).
+- `vercel.json` — `maxDuration` de 300s e exclusões.
+- `.vercelignore` — impede o envio de `exemplos base_inicial/`, `storage/` e docs.
+- `requirements.txt` — runtime enxuto.
+- `requirements-dev.txt` — local (`pymupdf`, `pytest`, `uvicorn`).
 
-## Teste local do modo demo
+## Teste local
 
 ```bash
-VERCEL_DEMO=1 python3 -m uvicorn app.main:app --reload
+python3 -m uvicorn app.main:app --reload
 ```
 
-Abra `http://127.0.0.1:8000`, preencha o formulário e confirme que o navegador
-baixa um `.zip` com os dois arquivos.
+Abra `http://127.0.0.1:8000`, gere o plano, valide e baixe os dois arquivos.
 
 ## Deploy
 
@@ -38,36 +38,44 @@ npx vercel          # preview
 npx vercel --prod   # produção
 ```
 
-O projeto usa Python 3.12+ no Vercel. O entrypoint é `app.main:app`.
-
 ## Variáveis de ambiente
 
-No painel do Vercel, em **Settings → Environment Variables**:
+Primeiro publique com o mock:
 
 ```env
-VERCEL_DEMO=1
 LLM_PROVIDER=mock
 ```
 
-Primeiro publique com o mock para testar o encanamento. Depois troque para o
-Groq seguindo `docs/groq.md`.
+Depois troque para OpenAI:
+
+```env
+LLM_PROVIDER=openai-compativel
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o
+LLM_API_KEY=...
+```
+
+`VERCEL_DEMO` não é mais usado: o fluxo em duas etapas funciona no Vercel sem
+disco.
 
 ## Acesso
 
 - O plano Hobby não tem proteção por senha; a URL de produção é pública.
 - Para um teste controlado, use uma regra de rate limit no WAF:
-  **Firewall → Custom Rules → Rate limiting** em `/gerar` (por IP).
+  **Firewall → Custom Rules → Rate limiting** em `/gerar-plano` e
+  `/gerar-atividades` (por IP).
 - Não use o Hobby como arquitetura final de um projeto comercial. Para o
   projeto pago, migre para o Pro.
 
-## Smoke test depois do deploy
+## Smoke test
 
-1. `GET /saude` responde `status: ok` e `base.total: 93`.
+1. `GET /saude` → `status: ok`, `base.total: 93`.
 2. `GET /bncc` lista os 93 objetivos.
-3. `POST /gerar` baixa um ZIP.
-4. O ZIP abre e contém `plano_aula.docx` e `caderno_atividades.pptx`.
-5. Os dois arquivos abrem no Word/PowerPoint.
-6. Os logs do Vercel não mostram erro de escrita em disco.
+3. `POST /gerar-plano` com um código da base → página do plano.
+4. `POST /gerar-atividades` com o plano JSON → página das atividades.
+5. Baixar `.docx` e `.pptx`; abrir no Word/PowerPoint.
+6. Conferir a nota de cobertura no último slide.
+7. Logs do Vercel sem erro de escrita em disco.
 
 ## Limites do Hobby
 
@@ -78,4 +86,4 @@ Groq seguindo `docs/groq.md`.
 - 100 deploys/dia.
 
 Para 20 a 30 gerações de teste, isso não é o gargalo. O limite real é o provedor
-de texto (Groq) e, depois, o de imagem (Cloudflare).
+de texto (OpenAI/Groq) e, depois, o de imagem (Cloudflare).

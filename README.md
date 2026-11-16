@@ -1,21 +1,30 @@
 # Plano de Aula BNCC — MVP interno
 
-Ferramenta interna para gerar, a partir de um tema, um **plano de aula** em
-`.docx` e um **caderno de atividades** em `.pptx`, no formato da instituição e
-alinhados à BNCC de Educação Infantil.
+Ferramenta interna para gerar um **plano de aula** e um **caderno de atividades**
+a partir de um **código da BNCC**, com foco em Educação Infantil (Pré I e Pré II).
 
-O material sai editável (Word e PowerPoint) para o professor corrigir antes de
-imprimir. PDF fica para uma etapa futura.
+O professor escolhe a turma e o código âncora. O sistema busca mais 6 códigos
+na base, monta o plano, o professor valida e só então as atividades são geradas.
+Tudo sai em `.docx` e `.pptx` editáveis.
 
-## O que já funciona
+## Regra principal
 
-- Base da BNCC de Educação Infantil: **93 objetivos** extraídos do PDF oficial.
-- Consulta rápida por grupo, campo de experiência e palavra-chave.
-- Geração do pacote completo (plano + caderno) em um clique.
-- Ícones/emoji na atividade de ligar palavra à letra, com biblioteca editável.
-- Validação que **impede código de BNCC inventado** e injeta a descrição oficial.
-- Histórico local das gerações.
-- Modo **mock** para testar sem chave de API e sem custo.
+- Códigos e descrições vêm **somente** de `data/bncc`.
+- A IA não escreve a descrição oficial da BNCC; o sistema injeta o texto do CSV.
+- Se o código não existir na base, a resposta é:
+  **"não possuo esta informação na minha base de dados"**.
+- Nada é inventado.
+
+## O que o sistema faz
+
+1. Professor escolhe **turma** (Pré I/Pré II) e **1 código âncora**.
+2. O sistema seleciona **6 códigos relacionados** na base: mesmo campo primeiro,
+   depois outros campos da mesma turma, até **7 códigos e 4 campos**.
+3. Gera o plano com **10 seções**, 7 códigos, 4 campos, 7 momentos e 6–8 recursos.
+4. O professor baixa o `.docx` e clica em **Validar plano**.
+5. Só depois da validação o sistema gera as **5 atividades** a partir do plano.
+6. O `.pptx` termina com a **nota de cobertura**: o que do plano não foi
+   trabalhado e o que foi acrescentado como sugestão.
 
 ## Início rápido
 
@@ -24,62 +33,46 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 
-python3 scripts/extrair_bncc_ei.py
 python3 scripts/validar_bncc.py
-
 python3 -m uvicorn app.main:app --reload
 ```
 
-Abra `http://127.0.0.1:8000`.
+Abra `http://127.0.0.1:8000`, escolha a turma e o código.
 
-Sem `LLM_API_KEY`, a aplicação usa o modo **mock**: gera um pacote de
-demonstração, suficiente para testar o fluxo e a qualidade dos arquivos.
+## IA
 
-## Modo real de IA
-
-Copie `.env.example` para `.env` e preencha:
+Sem `LLM_API_KEY`, a aplicação usa o **mock estrutural** (sem custo). Para o
+material real:
 
 ```env
 LLM_PROVIDER=openai-compativel
 LLM_BASE_URL=https://api.openai.com/v1
-LLM_API_KEY=sua-chave
-LLM_MODEL=gpt-4o-mini
+LLM_MODEL=gpt-4o
+LLM_API_KEY=...
 ```
 
-Também funciona com qualquer endpoint compatível com o formato
-`/chat/completions` da OpenAI, incluindo o endpoint compatível do Gemini:
+O mesmo cliente aceita qualquer endpoint compatível com OpenAI. O Groq é uma
+alternativa gratuita; veja `docs/groq.md`. Imagens em runtime ficam para depois
+(`docs/cloudflare.md`).
 
-```env
-LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
-LLM_MODEL=gemini-2.5-flash
-```
+## Deploy no Vercel
 
-Para forçar o mock: `LLM_PROVIDER=mock`.
-
-`requirements.txt` é o runtime enxuto usado pelo Vercel. O
-`requirements-dev.txt` inclui `pymupdf`, `uvicorn` e `pytest` para uso local.
-
-## Deploy no Vercel (modo demo)
-
-O Vercel não tem disco persistente. Para o teste, o app roda com
-`VERCEL_DEMO=1`: gera os dois arquivos em `/tmp` e devolve um **ZIP**, sem
-histórico.
+O fluxo é **sem estado**: o plano JSON fica no formulário entre as duas etapas;
+os downloads são re-renderizados a partir do JSON. Não há SQLite nem disco.
 
 ```bash
 npx vercel login
 npx vercel --prod
 ```
 
-Passo a passo em [`docs/vercel.md`](docs/vercel.md). Para o provedor de texto,
-veja [`docs/groq.md`](docs/groq.md).
+Configure `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL` e `LLM_API_KEY` no painel.
+Passo a passo em `docs/vercel.md`.
 
 ## Linha de comando
 
 ```bash
-python3 -m app.pipeline --tema "Meu nome, minha identidade" --uso "Pré II" --provider mock
+python3 -m app.pipeline --codigo EI03EF01 --uso "Pré II" --provider mock
 ```
-
-Os arquivos são gravados em `storage/geracoes/<id>/`.
 
 ## Testes
 
@@ -87,8 +80,8 @@ Os arquivos são gravados em `storage/geracoes/<id>/`.
 python3 -m pytest -q
 ```
 
-A suíte cobre a base da BNCC, o contrato, a resolução de códigos, os
-renderizadores `.docx`/`.pptx` e o fluxo HTTP completo.
+A suíte cobre a seleção dos 7 códigos, o contrato, a nota de cobertura, os
+renderizadores e o fluxo HTTP completo.
 
 ## Estrutura
 
@@ -96,53 +89,38 @@ renderizadores `.docx`/`.pptx` e o fluxo HTTP completo.
 data/bncc/       bncc_ei.csv, mapeamento_escolar.csv, README.md
 data/icons/      icones.csv, README.md
 scripts/         extrair_bncc_ei.py, validar_bncc.py
-prompts/         system.md, few_shot.md, schema_pacote.json
+prompts/         system_plano.md, system_atividades.md, schemas
 app/             bncc.py, contract.py, llm.py, pipeline.py
-                 render_docx.py, render_pptx.py, storage.py, main.py
+                 render_docx.py, render_pptx.py, main.py
 app/templates/   páginas HTML
 app/static/      style.css
 templates/       README sobre o layout dos documentos
 tests/           testes automatizados
-docs/            estado atual, decisões, escopo, teste, Vercel e Groq
+docs/            estado atual, decisões, escopo, teste, questionário e provedores
 pyproject.toml   dependências de runtime e entrypoint do Vercel
-vercel.json      configuração do deploy (maxDuration e exclusões)
+vercel.json      configuração do deploy
 .vercelignore    o que não sobe para o Vercel
-storage/         arquivos gerados (não versionar)
+storage/         histórico local do CLI (não versionar)
 ```
-
-## Documentação
-
-O índice completo está em [`docs/README.md`](docs/README.md). Os principais:
-
-- [`docs/estado_atual.md`](docs/estado_atual.md) — snapshot do que existe hoje.
-- [`docs/decisoes.md`](docs/decisoes.md) — decisões técnicas e de produto.
-- [`docs/escopo_mvp.md`](docs/escopo_mvp.md) — o que entra e o que não entra.
-- [`docs/roteiro_teste_cliente.md`](docs/roteiro_teste_cliente.md) — como testar com a professora.
-- [`docs/cloudflare.md`](docs/cloudflare.md) — preparação para imagens em runtime.
-
-## Regras de integridade
-
-- A IA só pode escolher códigos que existem na base.
-- A descrição oficial da BNCC vem do CSV, nunca da IA.
-- Pré I e Pré II usam os mesmos códigos `EI03`; o ano escolar é um campo
-  separado.
-- O caderno tem **5 atividades** no MVP, com formas e textos editáveis.
-- Nenhum dado de aluno é coletado.
 
 ## Limitações atuais
 
-- Só Educação Infantil (93 códigos). Fundamental I entra depois.
-- O caderno tem 5 atividades fixas (os cinco tipos do modelo).
-- O modo mock é ilustrativo; a qualidade final depende do provedor real.
-- O contrato foi extraído de **2 modelos**. Os outros 8 vão refiná-lo.
-- Sem login, pagamento ou multiusuário.
-- Sem PDF nesta fase.
+- Só Educação Infantil (93 códigos). Fundamental I não entrou.
+- O fluxo por código é uma decisão de produto; os modelos do cliente são por tema.
+- O provedor OpenAI ainda não foi exercitado neste ambiente.
+- O mock é estrutural: não mede qualidade pedagógica.
+- Sem PDF, login, pagamento ou multiusuário.
+- Os 8 tipos de atividade são templates genéricos; alguns temas vão precisar de ajuste.
+- Sem geração de imagem em runtime.
 
-## Próximos passos
+## Documentação
 
-1. Rodar a validação da dor com o cliente (documento interno, não versionado).
-2. Rodar o roteiro de teste com a professora (`docs/roteiro_teste_cliente.md`).
-3. Coletar os outros 8 modelos e ajustar o contrato.
-4. Incluir Fundamental I (528 códigos) e, se necessário, busca semântica.
-5. Exportação em PDF.
-6. Quantidade variável de atividades.
+- [`docs/estado_atual.md`](docs/estado_atual.md) — snapshot técnico.
+- [`docs/decisoes.md`](docs/decisoes.md) — decisões e porquês.
+- [`docs/escopo_mvp.md`](docs/escopo_mvp.md) — o que entra e o que não entra.
+- [`docs/roteiro_teste_cliente.md`](docs/roteiro_teste_cliente.md) — como testar.
+- [`docs/questionario_cliente.md`](docs/questionario_cliente.md) — consulta ao cliente (separado do MVP).
+- [`docs/vercel.md`](docs/vercel.md), [`docs/groq.md`](docs/groq.md), [`docs/cloudflare.md`](docs/cloudflare.md) — deploy e provedores.
+
+`exemplos base_inicial/` e `docs/dor_e_validacao.md` são mantidos fora do
+repositório público.

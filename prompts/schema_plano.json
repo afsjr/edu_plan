@@ -1,0 +1,321 @@
+{
+  "$defs": {
+    "Avaliacao": {
+      "properties": {
+        "introducao": {
+          "title": "Introducao",
+          "type": "string"
+        },
+        "indicadores": {
+          "items": {
+            "$ref": "#/$defs/IndicadorAvaliacao"
+          },
+          "minItems": 2,
+          "title": "Indicadores",
+          "type": "array"
+        }
+      },
+      "required": [
+        "introducao",
+        "indicadores"
+      ],
+      "title": "Avaliacao",
+      "type": "object"
+    },
+    "BrincadeiraCasa": {
+      "properties": {
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "descricao": {
+          "title": "Descricao",
+          "type": "string"
+        },
+        "organizacao": {
+          "default": "",
+          "title": "Organizacao",
+          "type": "string"
+        }
+      },
+      "required": [
+        "titulo",
+        "descricao"
+      ],
+      "title": "BrincadeiraCasa",
+      "type": "object"
+    },
+    "CampoExperienciaItem": {
+      "properties": {
+        "icone": {
+          "description": "Um emoji curto, ex.: 👥",
+          "title": "Icone",
+          "type": "string"
+        },
+        "nome": {
+          "description": "Nome oficial do campo de experiência",
+          "title": "Nome",
+          "type": "string"
+        },
+        "justificativa": {
+          "title": "Justificativa",
+          "type": "string"
+        }
+      },
+      "required": [
+        "icone",
+        "nome",
+        "justificativa"
+      ],
+      "title": "CampoExperienciaItem",
+      "type": "object"
+    },
+    "HabilidadeSelecionada": {
+      "properties": {
+        "codigo": {
+          "description": "Código existente na lista de candidatos",
+          "title": "Codigo",
+          "type": "string"
+        }
+      },
+      "required": [
+        "codigo"
+      ],
+      "title": "HabilidadeSelecionada",
+      "type": "object"
+    },
+    "Identificacao": {
+      "properties": {
+        "tema": {
+          "description": "Descrição oficial do código âncora, verbatim",
+          "title": "Tema",
+          "type": "string"
+        },
+        "codigo_ancora": {
+          "title": "Codigo Ancora",
+          "type": "string"
+        },
+        "turmas": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Turmas",
+          "type": "array"
+        },
+        "faixa_etaria": {
+          "title": "Faixa Etaria",
+          "type": "string"
+        },
+        "tempo_estimado": {
+          "title": "Tempo Estimado",
+          "type": "string"
+        },
+        "area_integradora": {
+          "description": "Campo oficial do código âncora",
+          "title": "Area Integradora",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tema",
+        "codigo_ancora",
+        "turmas",
+        "faixa_etaria",
+        "tempo_estimado",
+        "area_integradora"
+      ],
+      "title": "Identificacao",
+      "type": "object"
+    },
+    "IndicadorAvaliacao": {
+      "properties": {
+        "criterio": {
+          "title": "Criterio",
+          "type": "string"
+        },
+        "pre_1": {
+          "title": "Pre 1",
+          "type": "string"
+        },
+        "pre_2": {
+          "title": "Pre 2",
+          "type": "string"
+        }
+      },
+      "required": [
+        "criterio",
+        "pre_1",
+        "pre_2"
+      ],
+      "title": "IndicadorAvaliacao",
+      "type": "object"
+    },
+    "Momento": {
+      "properties": {
+        "ordem": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Ordem",
+          "type": "integer"
+        },
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "descricao": {
+          "title": "Descricao",
+          "type": "string"
+        },
+        "minutos": {
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Minutos",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ordem",
+        "titulo",
+        "descricao",
+        "minutos"
+      ],
+      "title": "Momento",
+      "type": "object"
+    },
+    "ObjetivosAno": {
+      "properties": {
+        "ano": {
+          "description": "Pré I ou Pré II",
+          "title": "Ano",
+          "type": "string"
+        },
+        "itens": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Itens",
+          "type": "array"
+        }
+      },
+      "required": [
+        "ano",
+        "itens"
+      ],
+      "title": "ObjetivosAno",
+      "type": "object"
+    },
+    "Recurso": {
+      "properties": {
+        "icone": {
+          "description": "Um emoji curto, ex.: 🪪",
+          "title": "Icone",
+          "type": "string"
+        },
+        "descricao": {
+          "title": "Descricao",
+          "type": "string"
+        }
+      },
+      "required": [
+        "icone",
+        "descricao"
+      ],
+      "title": "Recurso",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "titulo": {
+      "title": "Titulo",
+      "type": "string"
+    },
+    "subtitulo": {
+      "title": "Subtitulo",
+      "type": "string"
+    },
+    "identificacao": {
+      "$ref": "#/$defs/Identificacao"
+    },
+    "campos_experiencia": {
+      "items": {
+        "$ref": "#/$defs/CampoExperienciaItem"
+      },
+      "minItems": 1,
+      "title": "Campos Experiencia",
+      "type": "array"
+    },
+    "objetivos": {
+      "items": {
+        "$ref": "#/$defs/ObjetivosAno"
+      },
+      "minItems": 1,
+      "title": "Objetivos",
+      "type": "array"
+    },
+    "habilidades": {
+      "items": {
+        "$ref": "#/$defs/HabilidadeSelecionada"
+      },
+      "minItems": 1,
+      "title": "Habilidades",
+      "type": "array"
+    },
+    "recursos": {
+      "items": {
+        "$ref": "#/$defs/Recurso"
+      },
+      "minItems": 1,
+      "title": "Recursos",
+      "type": "array"
+    },
+    "desenvolvimento": {
+      "items": {
+        "$ref": "#/$defs/Momento"
+      },
+      "minItems": 1,
+      "title": "Desenvolvimento",
+      "type": "array"
+    },
+    "avaliacao": {
+      "$ref": "#/$defs/Avaliacao"
+    },
+    "adaptacoes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Adaptacoes",
+      "type": "array"
+    },
+    "observacoes_professor": {
+      "default": "",
+      "title": "Observacoes Professor",
+      "type": "string"
+    },
+    "dica": {
+      "title": "Dica",
+      "type": "string"
+    },
+    "brincadeira_casa": {
+      "$ref": "#/$defs/BrincadeiraCasa"
+    }
+  },
+  "required": [
+    "titulo",
+    "subtitulo",
+    "identificacao",
+    "campos_experiencia",
+    "objetivos",
+    "habilidades",
+    "recursos",
+    "desenvolvimento",
+    "avaliacao",
+    "adaptacoes",
+    "dica",
+    "brincadeira_casa"
+  ],
+  "title": "PlanoGerado",
+  "type": "object"
+}

@@ -1,4 +1,4 @@
-"""Pipeline de geração: pedido → BNCC → IA → validação → documentos."""
+"""Pipeline em duas etapas: plano → validação → atividades."""
 
 from __future__ import annotations
 
@@ -13,7 +13,18 @@ from pathlib import Path
 from app import storage
 from app.bncc import BaseBNCC
 from app.config import carregar_env
-from app.contract import SCHEMA_PADRAO, ErroContrato, Pacote, exportar_schema, resolver_pacote
+from app.contract import (
+    SCHEMA_CADERNO,
+    SCHEMA_PLANO,
+    CadernoAtividades,
+    ErroContrato,
+    Pacote,
+    PlanoAula,
+    exportar_schemas,
+    resolver_caderno,
+    resolver_plano,
+    validar_plano,
+)
 from app.llm import LLMClient, RequisicaoGeracao, obter_cliente
 from app.render_docx import render_plano
 from app.render_pptx import render_caderno
@@ -21,42 +32,71 @@ from app.render_pptx import render_caderno
 carregar_env()
 
 
+def _schemas() -> tuple[dict, dict]:
+    if not SCHEMA_PLANO.exists() or not SCHEMA_CADERNO.exists():
+        exportar_schemas()
+    return (
+        json.loads(SCHEMA_PLANO.read_text(encoding="utf-8")),
+        json.loads(SCHEMA_CADERNO.read_text(encoding="utf-8")),
+    )
+
+
+def gerar_plano(
+    requisicao: RequisicaoGeracao,
+    cliente: LLMClient | None = None,
+    base: BaseBNCC | None = None,
+) -> PlanoAula:
+    base = base or BaseBNCC()
+    cliente = cliente or obter_cliente()
+
+    candidatos = base.selecionar_codigos(
+        requisicao.codigo_ancora,
+        requisicao.uso_escolar,
+        total=7,
+        campos=4,
+    )
+    if len(candidatos) < 7 or len({h.sigla_campo for h in candidatos}) < 4:
+        raise ErroContrato(
+            "A base não possui códigos suficientes para montar o plano desta turma."
+        )
+
+    schema_plano, _ = _schemas()
+    gerado = cliente.gerar_plano(requisicao, candidatos, schema_plano)
+    permitidos = {habilidade.codigo for habilidade in candidatos}
+    return resolver_plano(gerado, base, permitidos, requisicao.codigo_ancora)
+
+
+def gerar_atividades(
+    plano: PlanoAula,
+    cliente: LLMClient | None = None,
+) -> CadernoAtividades:
+    base = BaseBNCC()
+    cliente = cliente or obter_cliente()
+    _, schema_caderno = _schemas()
+    gerado = cliente.gerar_atividades(plano, schema_caderno)
+    return resolver_caderno(gerado, plano, base)
+
+
 def gerar_pacote(
     requisicao: RequisicaoGeracao,
     cliente: LLMClient | None = None,
     base: BaseBNCC | None = None,
 ) -> Pacote:
-    base = base or BaseBNCC()
     cliente = cliente or obter_cliente()
-
-    candidatos = base.candidatos_para(requisicao.uso_escolar)
-    if not candidatos:
-        raise ErroContrato(
-            f"Não há habilidades candidatas para o uso escolar {requisicao.uso_escolar!r}."
-        )
-
-    if not SCHEMA_PADRAO.exists():
-        exportar_schema(SCHEMA_PADRAO)
-    schema = json.loads(SCHEMA_PADRAO.read_text(encoding="utf-8"))
-
-    gerado = cliente.gerar_pacote(requisicao, candidatos, schema)
-    permitidos = {habilidade.codigo for habilidade in candidatos}
-    return resolver_pacote(gerado, base, permitidos)
+    plano = gerar_plano(requisicao, cliente=cliente, base=base)
+    caderno = gerar_atividades(plano, cliente=cliente)
+    return Pacote(plano=plano, caderno=caderno, avisos=validar_plano(plano))
 
 
 def gerar_zip(
     requisicao: RequisicaoGeracao,
     cliente: LLMClient | None = None,
 ) -> bytes:
-    """Gera o pacote e devolve um ZIP em memória, sem tocar no disco persistente."""
-    cliente = cliente or obter_cliente()
     pacote = gerar_pacote(requisicao, cliente=cliente)
-
     with tempfile.TemporaryDirectory() as temporario:
         pasta = Path(temporario)
         plano = render_plano(pacote.plano, pasta / "plano_aula.docx")
         caderno = render_caderno(pacote.caderno, pasta / "caderno_atividades.pptx")
-
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as arquivo_zip:
             arquivo_zip.write(plano, arcname="plano_aula.docx")
@@ -81,7 +121,7 @@ def gerar_e_salvar(
         "id": geracao_id,
         "criado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "uso_escolar": requisicao.uso_escolar,
-        "tema": requisicao.tema,
+        "tema": pacote.plano.identificacao.tema,
         "observacoes": requisicao.observacoes,
         "provedor": getattr(cliente, "nome", "desconhecido"),
         "avisos": pacote.avisos,
@@ -94,11 +134,11 @@ def gerar_e_salvar(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Gera um pacote de plano + caderno.")
-    parser.add_argument("--tema", required=True, help="Tema da aula")
+    parser = argparse.ArgumentParser(description="Gera plano e atividades a partir de um código BNCC.")
+    parser.add_argument("--codigo", required=True, help="Código âncora, ex.: EI03EF01")
     parser.add_argument("--uso", default="Pré II", help="Pré I, Pré II, Maternal ou Berçário")
     parser.add_argument("--observacoes", default="", help="Observações para a geração")
-    parser.add_argument("--provider", help="mock ou openai-compativel (padrão: variável LLM_PROVIDER)")
+    parser.add_argument("--provider", help="mock ou openai-compativel")
     args = parser.parse_args()
 
     if args.provider:
@@ -108,7 +148,7 @@ def main() -> int:
 
     requisicao = RequisicaoGeracao(
         uso_escolar=args.uso,
-        tema=args.tema,
+        codigo_ancora=args.codigo,
         observacoes=args.observacoes,
     )
 

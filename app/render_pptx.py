@@ -229,40 +229,32 @@ def _cabecalho_atividade(slide, atividade: Atividade, cor: str) -> None:
     selo = _forma(slide, LARGURA - MARGEM - 6.0, 0.72, 6.0, 1.5, preenchimento=BRANCO, arredondado=True)
     _texto_na_forma(selo, f"{atividade.codigo_bncc}  •  {atividade.campo_experiencia}", tamanho=7.8, negrito=True, cor=cor)
 
-    _forma(slide, MARGEM, 3.35, CONTEUDO, 2.0, preenchimento=CINZA_CLARO, arredondado=True)
-    _texto(slide, MARGEM + 0.35, 3.55, CONTEUDO - 0.7, 1.6, atividade.enunciado, tamanho=11.5, cor=CINZA_ESCURO, ancoragem=MSO_ANCHOR.MIDDLE)
+    _forma(slide, MARGEM, 3.35, CONTEUDO, 2.35, preenchimento=CINZA_CLARO, arredondado=True)
+    _texto(slide, MARGEM + 0.35, 3.5, CONTEUDO - 0.7, 1.15, atividade.enunciado, tamanho=11, cor=CINZA_ESCURO, ancoragem=MSO_ANCHOR.MIDDLE)
+    _texto(slide, MARGEM + 0.35, 4.7, CONTEUDO - 0.7, 0.8, f"Objetivo: {atividade.objetivo_relacionado}", tamanho=7.5, cor=CINZA_TEXTO, ancoragem=MSO_ANCHOR.MIDDLE)
 
 
-def _conteudo_cobrir_nome(slide, conteudo: ConteudoAtividade, cor: str) -> None:
+def _conteudo_cobrir_palavra(slide, conteudo: ConteudoAtividade, cor: str) -> None:
     _texto(slide, MARGEM, 6.2, CONTEUDO, 1.0, "Cubra as letrinhas pontilhadas:", tamanho=11, negrito=True, cor=cor)
-    palavra = (conteudo.texto_para_cobrir or "NOME").upper()
+    palavra = (conteudo.texto_para_cobrir or "TEMA").upper()
     caixa = _forma(slide, MARGEM, 7.4, CONTEUDO, 4.2, preenchimento=BRANCO, contorno=cor, arredondado=True)
     _texto_na_forma(caixa, " ".join(palavra), tamanho=40, negrito=True, cor=CINZA_LINHA)
 
-    _texto(slide, MARGEM, 12.4, CONTEUDO, 1.0, "Agora escreva o seu nome:", tamanho=11, negrito=True, cor=cor)
+    _texto(slide, MARGEM, 12.4, CONTEUDO, 1.0, "Agora escreva a palavra:", tamanho=11, negrito=True, cor=cor)
     for indice in range(max(2, conteudo.linhas_escrita or 2)):
         y = 14.0 + indice * 2.2
         _linha(slide, MARGEM + 1.0, y, LARGURA - MARGEM - 1.0, y, CINZA_LINHA, 1.0, tracejada=True)
 
-    cracha = _forma(slide, MARGEM + 4.0, 21.2, CONTEUDO - 8.0, 4.6, preenchimento="FFF8E0", contorno=AMARELO, arredondado=True)
-    _texto_na_forma(cracha, "MEU CRACHÁ\n\n(escreva aqui)", tamanho=11, negrito=True, cor=LARANJA)
+    escreva = _forma(slide, MARGEM + 4.0, 21.2, CONTEUDO - 8.0, 4.6, preenchimento="FFF8E0", contorno=AMARELO, arredondado=True)
+    _texto_na_forma(escreva, "escreva aqui", tamanho=11, negrito=True, cor=LARANJA)
 
 
-def _conteudo_desenhar_rosto(slide, conteudo: ConteudoAtividade, cor: str) -> None:
-    _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Desenhe o seu rostinho no espelho:", tamanho=11, negrito=True, cor=cor)
-    espelho = _forma(slide, MARGEM + 2.7, 7.2, CONTEUDO - 5.4, 10.2, preenchimento="EAF6FF", contorno=AZUL, espessura=2.0, arredondado=True)
-    _texto_na_forma(espelho, "", tamanho=10)
+def _conteudo_desenhar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
+    _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Desenhe aqui:", tamanho=11, negrito=True, cor=cor)
+    quadro = _forma(slide, MARGEM + 2.0, 7.2, CONTEUDO - 4.0, 10.5, preenchimento="FFFDF5", contorno=cor, espessura=2.0, arredondado=True)
+    _texto_na_forma(quadro, "desenhe aqui", tamanho=12, cor=CINZA_LINHA)
 
-    centro_x = LARGURA / 2
-    rosto = _forma(slide, centro_x - 3.0, 8.8, 6.0, 7.0, preenchimento=BRANCO, contorno=AZUL, espessura=1.5, arredondado=False, forma=MSO_SHAPE.OVAL)
-    _texto_na_forma(rosto, "", tamanho=10)
-    for dx in (-1.1, 1.1):
-        olho = _forma(slide, centro_x + dx - 0.28, 10.7, 0.56, 0.56, preenchimento=AZUL_ESCURO, arredondado=False, forma=MSO_SHAPE.OVAL)
-        _texto_na_forma(olho, "", tamanho=8)
-    boca = _forma(slide, centro_x - 0.8, 12.9, 1.6, 0.55, preenchimento=LARANJA, arredondado=False, forma=MSO_SHAPE.OVAL)
-    _texto_na_forma(boca, "", tamanho=8)
-
-    frases = conteudo.frases or ["De mim, eu gosto de...", "Minha cor favorita é:"]
+    frases = conteudo.frases or ["O que eu mais gosto:", "Minha cor favorita é:"]
     largura_caixa = (CONTEUDO - 0.6) / 2
     for indice, frase in enumerate(frases[:4]):
         coluna = indice % 2
@@ -273,7 +265,7 @@ def _conteudo_desenhar_rosto(slide, conteudo: ConteudoAtividade, cor: str) -> No
         _texto_na_forma(caixa, frase, tamanho=9.5, negrito=False, cor=CINZA_ESCURO)
 
 
-def _conteudo_ligar_letra(slide, conteudo: ConteudoAtividade, cor: str) -> None:
+def _conteudo_ligar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
     _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Ligue cada desenho à letra com que o nome começa:", tamanho=11, negrito=True, cor=cor)
     pares = conteudo.pares or []
     if not pares:
@@ -377,13 +369,107 @@ def _conteudo_generico(slide, conteudo: ConteudoAtividade, cor: str) -> None:
     )
 
 
+def _conteudo_contar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
+    quantidade = max(1, min(conteudo.quantidade or 5, 20))
+    icone = icone_para(conteudo.icone_chave or "bola")
+    _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Conte os objetos e escreva o número:", tamanho=11, negrito=True, cor=cor)
+
+    colunas = 5
+    tamanho = 2.4
+    espaco = 0.28
+    inicio_x = MARGEM + 1.3
+    inicio_y = 7.6
+    for indice in range(quantidade):
+        coluna = indice % colunas
+        linha = indice // colunas
+        x = inicio_x + coluna * (tamanho + espaco)
+        y = inicio_y + linha * (tamanho + espaco)
+        celula = _forma(slide, x, y, tamanho, tamanho, preenchimento=BRANCO, contorno=cor, espessura=1.0, arredondado=True)
+        _texto_na_forma(celula, icone, tamanho=22, cor=CINZA_ESCURO)
+
+    linhas = (quantidade + colunas - 1) // colunas
+    y_resposta = inicio_y + linhas * (tamanho + espaco) + 1.0
+    _texto(slide, MARGEM, y_resposta, 6.0, 1.0, "Resposta:", tamanho=11, negrito=True, cor=cor)
+    _forma(slide, MARGEM + 3.2, y_resposta - 0.1, 3.4, 1.7, preenchimento=BRANCO, contorno=cor, espessura=1.6, arredondado=True)
+    _texto(slide, MARGEM, 24.8, CONTEUDO, 1.4, "Conte devagar, tocando cada objeto.", tamanho=9, italico=True, cor=CINZA_TEXTO)
+
+
+def _conteudo_completar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
+    sequencia = (conteudo.sequencia or ["1", "2", "3", "4", "5"])[:8]
+    lacunas = max(1, min(conteudo.lacunas or 1, len(sequencia)))
+    _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Complete a sequência:", tamanho=11, negrito=True, cor=cor)
+
+    total = len(sequencia)
+    largura = min(2.8, (CONTEUDO - 0.6) / max(total, 1) - 0.3)
+    x0 = MARGEM + 0.5
+    y = 8.5
+    for indice, item in enumerate(sequencia):
+        vazio = indice >= total - lacunas
+        caixa = _forma(
+            slide,
+            x0 + indice * (largura + 0.3),
+            y,
+            largura,
+            2.6,
+            preenchimento="FFF8E0" if vazio else BRANCO,
+            contorno=cor,
+            espessura=1.5,
+            arredondado=True,
+        )
+        _texto_na_forma(
+            caixa,
+            "?" if vazio else item,
+            tamanho=18,
+            negrito=True,
+            cor=cor if vazio else CINZA_ESCURO,
+        )
+
+    _texto(slide, MARGEM, 12.6, CONTEUDO, 1.2, "Escreva os itens que faltam:", tamanho=11, negrito=True, cor=cor)
+    for indice in range(lacunas):
+        _linha(
+            slide,
+            MARGEM + 1.0 + indice * 4.0,
+            15.0,
+            MARGEM + 4.2 + indice * 4.0,
+            15.0,
+            CINZA_LINHA,
+            1.0,
+            tracejada=True,
+        )
+
+
+def _conteudo_recortar_colar(slide, conteudo: ConteudoAtividade, cor: str) -> None:
+    itens = (conteudo.itens_recortar or ["círculo", "quadrado", "triângulo"])[:4]
+    _texto(slide, MARGEM, 6.0, CONTEUDO, 1.0, "Recorte as formas e cole no lugar certo:", tamanho=11, negrito=True, cor=cor)
+
+    for indice, item in enumerate(itens):
+        forma = _forma(
+            slide,
+            MARGEM + indice * 4.0,
+            7.6,
+            3.2,
+            3.0,
+            preenchimento=BRANCO,
+            contorno=cor,
+            espessura=1.6,
+            arredondado=True,
+        )
+        forma.line.dash_style = MSO_LINE_DASH_STYLE.DASH
+        _texto_na_forma(forma, item, tamanho=11, negrito=True, cor=CINZA_ESCURO)
+
+    alvo = _forma(slide, MARGEM, 13.0, CONTEUDO, 10.0, preenchimento="FFFDF5", contorno=cor, espessura=1.2, arredondado=True)
+    _texto_na_forma(alvo, "cole aqui", tamanho=12, cor=CINZA_LINHA)
+
+
 CONTEUDOS = {
-    "cobrir_nome": _conteudo_cobrir_nome,
-    "desenhar_rosto": _conteudo_desenhar_rosto,
-    "ligar_letra_inicial": _conteudo_ligar_letra,
-    "colorir_por_numero": _conteudo_colorir,
+    "cobrir_palavra": _conteudo_cobrir_palavra,
+    "ligar": _conteudo_ligar,
+    "contar": _conteudo_contar,
+    "colorir": _conteudo_colorir,
+    "completar": _conteudo_completar,
+    "desenhar": _conteudo_desenhar,
     "labirinto": _conteudo_labirinto,
-    "outro": _conteudo_generico,
+    "recortar_colar": _conteudo_recortar_colar,
 }
 
 
@@ -400,7 +486,7 @@ def _capa(prs: Presentation, caderno: CadernoAtividades) -> None:
     _texto(slide, MARGEM, 6.8, CONTEUDO - 2.0, 1.2, caderno.capa.subtitulo, tamanho=13, cor=BRANCO)
 
     _forma(slide, MARGEM, 11.0, CONTEUDO, 2.0, preenchimento=CINZA_CLARO, arredondado=True)
-    _texto(slide, MARGEM + 0.4, 11.25, CONTEUDO - 0.8, 1.5, f"{caderno.capa.etapa}  •  {caderno.capa.faixa_etaria}", tamanho=13, negrito=True, cor=CINZA_ESCURO)
+    _texto(slide, MARGEM + 0.4, 11.25, CONTEUDO - 0.8, 1.5, f"{caderno.capa.etapa}  •  {caderno.capa.faixa_etaria}  •  {caderno.capa.codigo_ancora}", tamanho=12, negrito=True, cor=CINZA_ESCURO)
 
     selo = _forma(slide, MARGEM, 13.6, 8.2, 1.6, preenchimento="FFF8E0", contorno=AMARELO, arredondado=True)
     _texto_na_forma(selo, caderno.capa.alinhamento_bncc, tamanho=10, negrito=True, cor=LARANJA)
@@ -419,6 +505,41 @@ def _capa(prs: Presentation, caderno: CadernoAtividades) -> None:
     _texto(slide, MARGEM, 28.0, CONTEUDO, 1.0, caderno.capa.titulo, tamanho=8, cor=CINZA_TEXTO)
 
 
+def _slide_nota(prs: Presentation, caderno: CadernoAtividades) -> None:
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _forma(slide, 0, 0, LARGURA, 2.9, preenchimento=CINZA_ESCURO, arredondado=False, forma=MSO_SHAPE.RECTANGLE)
+    _texto(slide, MARGEM, 0.7, CONTEUDO, 1.8, "Nota para o professor", tamanho=20, negrito=True, cor=BRANCO, ancoragem=MSO_ANCHOR.MIDDLE)
+    _texto(slide, MARGEM, 3.4, CONTEUDO, 1.0, "Cobertura do plano", tamanho=14, negrito=True, cor=AZUL_ESCURO)
+
+    nota = caderno.nota_cobertura
+    y = 4.6
+    if nota.codigos_nao_trabalhados:
+        _texto(slide, MARGEM, y, CONTEUDO, 1.0, "Habilidades do plano não trabalhadas nas atividades:", tamanho=10.5, negrito=True, cor=LARANJA)
+        y += 1.1
+        for item in nota.codigos_nao_trabalhados:
+            _texto(slide, MARGEM, y, CONTEUDO, 1.2, f"{item.codigo} — {item.descricao}", tamanho=9, cor=CINZA_ESCURO)
+            y += 1.4
+    if nota.objetivos_nao_trabalhados:
+        _texto(slide, MARGEM, y, CONTEUDO, 1.0, "Objetivos não contemplados:", tamanho=10.5, negrito=True, cor=LARANJA)
+        y += 1.1
+        for objetivo in nota.objetivos_nao_trabalhados:
+            _texto(slide, MARGEM, y, CONTEUDO, 1.0, f"• {objetivo}", tamanho=9, cor=CINZA_ESCURO)
+            y += 1.1
+    if nota.sugestoes_extras:
+        _texto(slide, MARGEM, y, CONTEUDO, 1.0, "Sugestões extras:", tamanho=10.5, negrito=True, cor=VERDE)
+        y += 1.1
+        for sugestao in nota.sugestoes_extras:
+            _texto(slide, MARGEM, y, CONTEUDO, 1.0, f"• {sugestao}", tamanho=9, cor=CINZA_ESCURO)
+            y += 1.1
+    if not (nota.codigos_nao_trabalhados or nota.objetivos_nao_trabalhados or nota.sugestoes_extras):
+        _texto(slide, MARGEM, 5.0, CONTEUDO, 2.0, "Todas as habilidades e objetivos do plano foram trabalhados nas atividades.", tamanho=11, cor=CINZA_ESCURO)
+
+    _texto(slide, MARGEM, 25.5, CONTEUDO, 1.4, "Este slide é opcional: o professor pode removê-lo antes de imprimir.", tamanho=8.5, italico=True, cor=CINZA_TEXTO)
+    _linha(slide, MARGEM, 27.7, LARGURA - MARGEM, 27.7, CINZA_LINHA, 0.75)
+    _texto(slide, MARGEM, 28.0, CONTEUDO - 3.0, 1.0, f"Nota de cobertura  •  {caderno.capa.titulo}  •  {caderno.capa.etapa}", tamanho=8, cor=CINZA_TEXTO)
+    _texto(slide, LARGURA - MARGEM - 2.5, 28.0, 2.5, 1.0, str(len(caderno.atividades) + 2), tamanho=8, cor=CINZA_TEXTO, alinhamento=PP_ALIGN.RIGHT)
+
+
 def render_caderno(caderno: CadernoAtividades, destino: Path) -> Path:
     prs = Presentation()
     prs.slide_width = Cm(LARGURA)
@@ -433,6 +554,8 @@ def render_caderno(caderno: CadernoAtividades, destino: Path) -> Path:
         renderizador = CONTEUDOS.get(atividade.tipo, _conteudo_generico)
         renderizador(slide, atividade.conteudo, cor)
         _rodape(slide, caderno, atividade.numero)
+
+    _slide_nota(prs, caderno)
 
     destino = Path(destino)
     destino.parent.mkdir(parents=True, exist_ok=True)

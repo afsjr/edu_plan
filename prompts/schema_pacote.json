@@ -18,19 +18,26 @@
         },
         "tipo": {
           "enum": [
-            "cobrir_nome",
-            "desenhar_rosto",
-            "ligar_letra_inicial",
-            "colorir_por_numero",
+            "cobrir_palavra",
+            "ligar",
+            "contar",
+            "colorir",
+            "completar",
+            "desenhar",
             "labirinto",
-            "outro"
+            "recortar_colar"
           ],
           "title": "Tipo",
           "type": "string"
         },
         "codigo_bncc": {
-          "description": "Código existente na lista de candidatos",
+          "description": "Código existente no plano",
           "title": "Codigo Bncc",
+          "type": "string"
+        },
+        "objetivo_relacionado": {
+          "description": "Objetivo do plano, copiado verbatim",
+          "title": "Objetivo Relacionado",
           "type": "string"
         },
         "conteudo": {
@@ -54,9 +61,32 @@
         "titulo",
         "enunciado",
         "tipo",
-        "codigo_bncc"
+        "codigo_bncc",
+        "objetivo_relacionado"
       ],
       "title": "AtividadeGerada",
+      "type": "object"
+    },
+    "Avaliacao": {
+      "properties": {
+        "introducao": {
+          "title": "Introducao",
+          "type": "string"
+        },
+        "indicadores": {
+          "items": {
+            "$ref": "#/$defs/IndicadorAvaliacao"
+          },
+          "minItems": 2,
+          "title": "Indicadores",
+          "type": "array"
+        }
+      },
+      "required": [
+        "introducao",
+        "indicadores"
+      ],
+      "title": "Avaliacao",
       "type": "object"
     },
     "BrincadeiraCasa": {
@@ -94,6 +124,9 @@
           "minItems": 1,
           "title": "Atividades",
           "type": "array"
+        },
+        "nota_cobertura": {
+          "$ref": "#/$defs/NotaCoberturaGerada"
         }
       },
       "required": [
@@ -111,6 +144,7 @@
           "type": "string"
         },
         "nome": {
+          "description": "Nome oficial do campo de experiência",
           "title": "Nome",
           "type": "string"
         },
@@ -148,6 +182,10 @@
         "alinhamento_bncc": {
           "title": "Alinhamento Bncc",
           "type": "string"
+        },
+        "codigo_ancora": {
+          "title": "Codigo Ancora",
+          "type": "string"
         }
       },
       "required": [
@@ -155,13 +193,13 @@
         "subtitulo",
         "etapa",
         "faixa_etaria",
-        "alinhamento_bncc"
+        "alinhamento_bncc",
+        "codigo_ancora"
       ],
       "title": "CapaCaderno",
       "type": "object"
     },
     "ConteudoAtividade": {
-      "description": "Conteúdo específico de cada tipo de atividade.\n\nNem todo campo é usado em todo tipo. O renderizador escolhe os campos\nconforme ``AtividadeGerada.tipo``.",
       "properties": {
         "texto_para_cobrir": {
           "anyOf": [
@@ -173,7 +211,6 @@
             }
           ],
           "default": null,
-          "description": "Nome ou palavra para cobrir, no tipo cobrir_nome",
           "title": "Texto Para Cobrir"
         },
         "linhas_escrita": {
@@ -235,6 +272,61 @@
           "default": null,
           "title": "Rotulo Fim"
         },
+        "quantidade": {
+          "anyOf": [
+            {
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quantidade"
+        },
+        "icone_chave": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Chave da biblioteca de ícones, ex.: abacaxi",
+          "title": "Icone Chave"
+        },
+        "sequencia": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sequencia",
+          "type": "array"
+        },
+        "lacunas": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lacunas"
+        },
+        "itens_recortar": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Itens Recortar",
+          "type": "array"
+        },
         "elementos_extras": {
           "items": {
             "type": "string"
@@ -249,7 +341,7 @@
     "HabilidadeSelecionada": {
       "properties": {
         "codigo": {
-          "description": "Código existente na lista de candidatos, ex.: EI03EF01",
+          "description": "Código existente na lista de candidatos",
           "title": "Codigo",
           "type": "string"
         }
@@ -263,7 +355,12 @@
     "Identificacao": {
       "properties": {
         "tema": {
+          "description": "Descrição oficial do código âncora, verbatim",
           "title": "Tema",
+          "type": "string"
+        },
+        "codigo_ancora": {
+          "title": "Codigo Ancora",
           "type": "string"
         },
         "turmas": {
@@ -283,18 +380,43 @@
           "type": "string"
         },
         "area_integradora": {
+          "description": "Campo oficial do código âncora",
           "title": "Area Integradora",
           "type": "string"
         }
       },
       "required": [
         "tema",
+        "codigo_ancora",
         "turmas",
         "faixa_etaria",
         "tempo_estimado",
         "area_integradora"
       ],
       "title": "Identificacao",
+      "type": "object"
+    },
+    "IndicadorAvaliacao": {
+      "properties": {
+        "criterio": {
+          "title": "Criterio",
+          "type": "string"
+        },
+        "pre_1": {
+          "title": "Pre 1",
+          "type": "string"
+        },
+        "pre_2": {
+          "title": "Pre 2",
+          "type": "string"
+        }
+      },
+      "required": [
+        "criterio",
+        "pre_1",
+        "pre_2"
+      ],
+      "title": "IndicadorAvaliacao",
       "type": "object"
     },
     "ItemLegendaCor": {
@@ -349,6 +471,26 @@
       "title": "Momento",
       "type": "object"
     },
+    "NotaCoberturaGerada": {
+      "properties": {
+        "objetivos_nao_trabalhados": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Objetivos Nao Trabalhados",
+          "type": "array"
+        },
+        "sugestoes_extras": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sugestoes Extras",
+          "type": "array"
+        }
+      },
+      "title": "NotaCoberturaGerada",
+      "type": "object"
+    },
     "ObjetivosAno": {
       "properties": {
         "ano": {
@@ -360,7 +502,7 @@
           "items": {
             "type": "string"
           },
-          "minItems": 1,
+          "minItems": 2,
           "title": "Itens",
           "type": "array"
         }
@@ -392,7 +534,6 @@
             }
           ],
           "default": null,
-          "description": "Chave opcional da biblioteca de ícones; o sistema também tenta pela palavra.",
           "title": "Icone"
         }
       },
@@ -456,6 +597,22 @@
           "title": "Desenvolvimento",
           "type": "array"
         },
+        "avaliacao": {
+          "$ref": "#/$defs/Avaliacao"
+        },
+        "adaptacoes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Adaptacoes",
+          "type": "array"
+        },
+        "observacoes_professor": {
+          "default": "",
+          "title": "Observacoes Professor",
+          "type": "string"
+        },
         "dica": {
           "title": "Dica",
           "type": "string"
@@ -473,6 +630,8 @@
         "habilidades",
         "recursos",
         "desenvolvimento",
+        "avaliacao",
+        "adaptacoes",
         "dica",
         "brincadeira_casa"
       ],

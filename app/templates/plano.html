@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block titulo %}{{ plano.titulo }} • Plano de Aula{% endblock %}
+
+{% block conteudo %}
+<section class="hero compacto">
+  <p class="olho">Plano gerado • aguardando validação</p>
+  <h1>{{ plano.titulo }}</h1>
+  <p class="sub">{{ plano.identificacao.tema }}</p>
+  <p class="meta">
+    Código âncora: <strong>{{ plano.identificacao.codigo_ancora }}</strong> •
+    {{ plano.identificacao.tempo_estimado }} •
+    {{ plano.identificacao.area_integradora }} •
+    {{ plano.identificacao.turmas|join(' e ') }}
+  </p>
+</section>
+
+<div class="acoes">
+  <form method="post" action="/baixar-plano">
+    <textarea name="plano_json" hidden>{{ plano_json }}</textarea>
+    <button type="submit" class="botao secundario">Baixar plano (.docx)</button>
+  </form>
+  <form method="post" action="/gerar-atividades">
+    <textarea name="plano_json" hidden>{{ plano_json }}</textarea>
+    <button type="submit" class="botao">Validar plano e gerar atividades</button>
+  </form>
+  <a href="/" class="link">Novo plano</a>
+</div>
+
+<div class="aviso-leve">
+  O PPT só é gerado depois desta validação. O plano fica no navegador entre as
+  duas etapas; nada é gravado no servidor.
+</div>
+
+<div class="grade duas">
+  <section class="cartao">
+    <h2>Campos de experiência</h2>
+    <table class="tabela">
+      <thead><tr><th></th><th>Campo</th><th>Por que entra</th></tr></thead>
+      <tbody>
+        {% for campo in plano.campos_experiencia %}
+        <tr><td>{{ campo.icone }}</td><td><strong>{{ campo.nome }}</strong></td><td>{{ campo.justificativa }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2 style="margin-top:24px;">Objetivos de aprendizagem</h2>
+    {% for bloco in plano.objetivos %}
+    <h3>{{ bloco.ano }}</h3>
+    <ul class="codigos">
+      {% for item in bloco.itens %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+    {% endfor %}
+
+    <h2 style="margin-top:24px;">Habilidades da BNCC</h2>
+    <table class="tabela">
+      <thead><tr><th>Código</th><th>Descrição oficial</th><th>Campo</th></tr></thead>
+      <tbody>
+        {% for habilidade in plano.habilidades %}
+        <tr>
+          <td><strong>{{ habilidade.codigo }}</strong></td>
+          <td>{{ habilidade.descricao }}</td>
+          <td>{{ habilidade.campo_experiencia }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="cartao">
+    <h2>Recursos</h2>
+    <ul class="codigos">
+      {% for recurso in plano.recursos %}<li>{{ recurso.icone }} {{ recurso.descricao }}</li>{% endfor %}
+    </ul>
+
+    <h2 style="margin-top:24px;">Desenvolvimento</h2>
+    <ol class="momentos">
+      {% for momento in plano.desenvolvimento %}
+      <li>
+        <strong>{{ momento.titulo }}</strong>
+        <span class="minutos">{{ momento.minutos }} min</span>
+        <p>{{ momento.descricao }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+
+    <div class="aviso-leve"><strong>Dica:</strong> {{ plano.dica }}</div>
+
+    <h2 style="margin-top:24px;">Brincadeira / casa</h2>
+    <p><strong>{{ plano.brincadeira_casa.titulo }}</strong></p>
+    <p class="meta">{{ plano.brincadeira_casa.descricao }}</p>
+    {% if plano.brincadeira_casa.organizacao %}
+    <p class="meta">Organização: {{ plano.brincadeira_casa.organizacao }}</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="grade duas" style="margin-top:20px;">
+  <section class="cartao">
+    <h2>Avaliação</h2>
+    <p class="meta">{{ plano.avaliacao.introducao }}</p>
+    <table class="tabela">
+      <thead><tr><th>Critério</th><th>Pré I</th><th>Pré II</th></tr></thead>
+      <tbody>
+        {% for indicador in plano.avaliacao.indicadores %}
+        <tr><td>{{ indicador.criterio }}</td><td>{{ indicador.pre_1 }}</td><td>{{ indicador.pre_2 }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="cartao">
+    <h2>Adaptações e acessibilidade</h2>
+    <ul class="codigos">
+      {% for item in plano.adaptacoes %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+
+    <h2 style="margin-top:24px;">Observações do professor</h2>
+    {% if plano.observacoes_professor %}
+    <p class="meta">{{ plano.observacoes_professor }}</p>
+    {% else %}
+    <div class="aviso-leve">Espaço para o professor registrar o que funcionou e o que precisa ajustar depois da aula.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

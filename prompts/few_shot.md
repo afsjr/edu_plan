@@ -18,6 +18,9 @@ Ordem fixa das seções:
 5. Recursos e materiais (ícone + descrição objetiva).
 6. Desenvolvimento da aula (momentos numerados, com tempo em minutos).
 7. Brincadeira e atividade para casa.
+8. Avaliação (rubrica formativa por faixa etária).
+9. Adaptações e acessibilidade.
+10. Observações do professor.
 
 Características de escrita:
 
@@ -33,10 +36,16 @@ Características de escrita:
 - 5 atividades, uma por página A4.
 - Cada atividade tem: número, título, enunciado, código BNCC, campo de
   experiência e uma área de realização.
-- Tipos usados no modelo: cobrir o nome, desenhar o rosto, ligar palavra à letra
-  inicial, colorir por número e labirinto.
+- Tipos genéricos: cobrir_palavra, ligar, contar, colorir, completar, desenhar,
+  labirinto e recortar_colar. O modelo escolhe 5.
+- O caderno termina com a nota de cobertura do plano.
 - Tudo editável: texto, forma, tabela. Nada de imagem achatada.
 - Contagem exata quando a atividade pede contagem.
+
+## Título
+
+O título/tema do plano vem da descrição oficial do código âncora. Não invente
+um tema.
 
 ## Tom
 

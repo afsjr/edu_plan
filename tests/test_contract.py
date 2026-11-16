@@ -25,8 +25,20 @@ def test_resolve_exemplo(base, permitidos):
     assert len(pacote.plano.habilidades) == 7
     assert len(pacote.caderno.atividades) == 5
     assert pacote.avisos == []
-    assert pacote.plano.habilidades[0].descricao.startswith("Demonstrar empatia")
+    assert pacote.plano.identificacao.codigo_ancora == "EI03EF01"
+    assert pacote.plano.habilidades[0].descricao
     assert pacote.caderno.atividades[0].campo_experiencia
+    nao_trabalhados = {
+        item.codigo for item in pacote.caderno.nota_cobertura.codigos_nao_trabalhados
+    }
+    assert nao_trabalhados == {"EI03EO01", "EI03EO04"}
+
+
+def test_atividade_fora_do_plano(base, permitidos):
+    gerado = pacote_exemplo()
+    gerado.caderno.atividades[0].codigo_bncc = "EI03ET01"
+    with pytest.raises(ErroContrato):
+        resolver_pacote(gerado, base, permitidos)
 
 
 def test_rejeita_codigo_fora_da_lista(base, permitidos):

@@ -1,11 +1,10 @@
-"""Clientes de geração do pacote.
+"""Clientes de geração em duas etapas: plano e atividades.
 
-- ``MockLLM``: gera um pacote determinístico, sem custo e sem chave. Serve para
-  o cliente testar o fluxo completo e para os testes automatizados.
-- ``OpenAICompativel``: chama qualquer API compatível com o formato de chat
-  completions da OpenAI (OpenAI, Gemini via endpoint compatível, etc.).
+- ``MockLLM``: estrutural, sem custo, para testes e demonstração offline.
+- ``OpenAICompativel``: OpenAI (ou endpoint compatível) para o material real.
 
-Trocar de provedor não muda o pipeline: ambos devolvem ``PacoteGerado``.
+O modelo escolhe códigos e escreve texto pedagógico. A descrição oficial da
+BNCC nunca é escrita por ele: o resolvedor injeta o texto do CSV.
 """
 
 from __future__ import annotations
@@ -13,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -22,6 +22,7 @@ import httpx
 from app.bncc import Habilidade, normalizar
 from app.contract import (
     AtividadeGerada,
+    Avaliacao,
     BrincadeiraCasa,
     CadernoGerado,
     CampoExperienciaItem,
@@ -29,19 +30,23 @@ from app.contract import (
     ConteudoAtividade,
     HabilidadeSelecionada,
     Identificacao,
+    IndicadorAvaliacao,
     ItemLegendaCor,
     Momento,
+    NotaCoberturaGerada,
     ObjetivosAno,
-    PacoteGerado,
     ParLigar,
+    PlanoAula,
     PlanoGerado,
     Recurso,
+    SCHEMA_CADERNO,
+    SCHEMA_PLANO,
+    TIPOS_ATIVIDADE,
 )
-from app.exemplo_pacote import CODIGOS_PLANO, pacote_exemplo
 
 RAIZ = Path(__file__).resolve().parents[1]
-PROMPT_SISTEMA = RAIZ / "prompts" / "system.md"
-SCHEMA = RAIZ / "prompts" / "schema_pacote.json"
+PROMPT_PLANO = RAIZ / "prompts" / "system_plano.md"
+PROMPT_ATIVIDADES = RAIZ / "prompts" / "system_atividades.md"
 
 CAMPOS_OFICIAIS = [
     "O eu, o outro e o nós",
@@ -59,6 +64,17 @@ ICONES_CAMPOS = {
     "Espaços, tempos, quantidades, relações e transformações": "🔢",
 }
 
+RECURSOS_GENERICOS = [
+    ("📄", "Folhas impressas da atividade (uma por criança)."),
+    ("✏️", "Lápis, borracha e apontador."),
+    ("🖍️", "Lápis de cor, giz de cera e canetinhas de ponta grossa."),
+    ("✂️", "Tesoura sem ponta e cola bastão."),
+    ("🧩", "Material manipulável para a atividade principal."),
+    ("📦", "Caixa ou saco surpresa para a dinâmica de abertura."),
+    ("🎵", "Música curta para acolhida e encerramento."),
+    ("🚩", "Cartaz ou mural para registrar as produções."),
+]
+
 
 class ErroLLM(RuntimeError):
     """Falha ao obter ou interpretar a resposta do provedor de IA."""
@@ -67,7 +83,7 @@ class ErroLLM(RuntimeError):
 @dataclass
 class RequisicaoGeracao:
     uso_escolar: str
-    tema: str
+    codigo_ancora: str
     observacoes: str = ""
     quantidade_atividades: int = 5
 
@@ -75,136 +91,207 @@ class RequisicaoGeracao:
 class LLMClient(Protocol):
     nome: str
 
-    def gerar_pacote(
+    def gerar_plano(
         self,
         requisicao: RequisicaoGeracao,
         candidatos: list[Habilidade],
         schema: dict,
-    ) -> PacoteGerado: ...
+    ) -> PlanoGerado: ...
+
+    def gerar_atividades(
+        self,
+        plano: PlanoAula,
+        schema: dict,
+    ) -> CadernoGerado: ...
 
 
-def _titulo(tema: str) -> str:
-    return " ".join(palavra[:1].upper() + palavra[1:] for palavra in tema.strip().split())
+# ---------------------------------------------------------------------------
+# Mock estrutural
+# ---------------------------------------------------------------------------
 
 
-def _primeira_palavra(tema: str) -> str:
-    palavras = re.findall(r"[A-Za-zÀ-ÿ]{3,}", tema)
-    if not palavras:
-        return "NOME"
-    return palavras[0].upper()[:8]
+def _campos_de(candidatos: list[Habilidade]) -> list[CampoExperienciaItem]:
+    vistos: set[str] = set()
+    campos: list[CampoExperienciaItem] = []
+    for habilidade in candidatos:
+        if habilidade.sigla_campo in vistos:
+            continue
+        vistos.add(habilidade.sigla_campo)
+        campos.append(
+            CampoExperienciaItem(
+                icone=ICONES_CAMPOS.get(habilidade.campo_experiencia, "✨"),
+                nome=habilidade.campo_experiencia,
+                justificativa=f"O tema dialoga com este campo ao trabalhar o objetivo oficial.",
+            )
+        )
+        if len(campos) == 4:
+            break
+    for nome in CAMPOS_OFICIAIS:
+        if len(campos) == 4:
+            break
+        if nome not in {campo.nome for campo in campos}:
+            campos.append(
+                CampoExperienciaItem(
+                    icone=ICONES_CAMPOS.get(nome, "✨"),
+                    nome=nome,
+                    justificativa="Campo articulado ao tema da aula.",
+                )
+            )
+    return campos
+
+
+def _objetivos_mock() -> list[ObjetivosAno]:
+    return [
+        ObjetivosAno(
+            ano="Pré I",
+            itens=[
+                "Reconhecer elementos do objetivo oficial em situações do cotidiano.",
+                "Explorar materiais e linguagens relacionados ao tema.",
+                "Participar das atividades propostas com apoio do professor.",
+                "Compartilhar descobertas com o grupo.",
+            ],
+        ),
+        ObjetivosAno(
+            ano="Pré II",
+            itens=[
+                "Representar o tema com mais autonomia.",
+                "Comparar e registrar elementos do tema.",
+                "Identificar semelhanças e diferenças.",
+                "Explicar o que aprendeu com suas próprias palavras.",
+            ],
+        ),
+    ]
 
 
 class MockLLM:
-    """Gera um pacote plausível sem chamar nenhum serviço externo."""
-
     nome = "mock"
 
-    def gerar_pacote(
+    def gerar_plano(
         self,
         requisicao: RequisicaoGeracao,
         candidatos: list[Habilidade],
         schema: dict,
-    ) -> PacoteGerado:
-        permitidos = {habilidade.codigo for habilidade in candidatos}
-        tema_normalizado = normalizar(requisicao.tema)
+    ) -> PlanoGerado:
+        ancora = next(
+            (h for h in candidatos if h.codigo == requisicao.codigo_ancora),
+            candidatos[0],
+        )
+        campos = _campos_de(candidatos)
+        objetivos = _objetivos_mock()
 
-        if "nome" in tema_normalizado and "identidade" in tema_normalizado:
-            if set(CODIGOS_PLANO).issubset(permitidos):
-                pacote = pacote_exemplo()
-                pacote.plano.titulo = _titulo(requisicao.tema)
-                pacote.plano.identificacao.tema = _titulo(requisicao.tema)
-                pacote.caderno.capa.titulo = _titulo(requisicao.tema)
-                return pacote
+        return PlanoGerado(
+            titulo=f"{ancora.codigo} — objetivo oficial",
+            subtitulo=f"Educação Infantil • {requisicao.uso_escolar}",
+            identificacao=Identificacao(
+                tema=ancora.objetivo,
+                codigo_ancora=ancora.codigo,
+                turmas=[requisicao.uso_escolar],
+                faixa_etaria="4 a 5 anos",
+                tempo_estimado="60 minutos",
+                area_integradora=ancora.campo_experiencia,
+            ),
+            campos_experiencia=campos,
+            objetivos=objetivos,
+            habilidades=[
+                HabilidadeSelecionada(codigo=habilidade.codigo)
+                for habilidade in candidatos
+            ],
+            recursos=[
+                Recurso(icone=icone, descricao=descricao)
+                for icone, descricao in RECURSOS_GENERICOS
+            ],
+            desenvolvimento=[
+                Momento(ordem=1, titulo="Acolhida", descricao="Receber as crianças e apresentar o objetivo do dia.", minutos=5),
+                Momento(ordem=2, titulo="Conversa inicial", descricao="Ouvir o que as crianças já sabem sobre o tema.", minutos=8),
+                Momento(ordem=3, titulo="Exploração do objetivo", descricao="Apresentar o objetivo oficial com apoio de material concreto.", minutos=10),
+                Momento(ordem=4, titulo="Atividade principal", descricao="Realizar a atividade principal do caderno com mediação.", minutos=18),
+                Momento(ordem=5, titulo="Brincadeira", descricao="Fazer uma brincadeira relacionada ao objetivo.", minutos=8),
+                Momento(ordem=6, titulo="Registro", descricao="Registrar as produções e as falas das crianças.", minutos=7),
+                Momento(ordem=7, titulo="Encerramento", descricao="Retomar o objetivo e conversar sobre o que aprenderam.", minutos=4),
+            ],
+            avaliacao=Avaliacao(
+                introducao="A avaliação é processual e formativa; observe a participação e os registros.",
+                indicadores=[
+                    IndicadorAvaliacao(criterio="Reconhece o objetivo", pre_1="Com apoio", pre_2="Com autonomia"),
+                    IndicadorAvaliacao(criterio="Participa da atividade", pre_1="Com incentivo", pre_2="Com iniciativa"),
+                    IndicadorAvaliacao(criterio="Expressa o que aprendeu", pre_1="Com mediação", pre_2="Sozinho"),
+                    IndicadorAvaliacao(criterio="Colabora com o grupo", pre_1="Com lembrete", pre_2="Espontaneamente"),
+                ],
+            ),
+            adaptacoes=[
+                "Para crianças com dificuldade motora, oferecer material maior e apoio físico.",
+                "Para crianças com deficiência visual, usar materiais com textura e contraste.",
+                "Para crianças tímidas, permitir resposta em pequenos grupos.",
+                "Para turmas numerosas, dividir a atividade em estações.",
+            ],
+            observacoes_professor="",
+            dica="Ajuste os tempos conforme a rotina da instituição e o ritmo da turma.",
+            brincadeira_casa=BrincadeiraCasa(
+                titulo="Levar o objetivo para casa",
+                descricao="Convidar a família a conversar sobre o tema e registrar uma descoberta.",
+                organizacao="Enviar uma folha simples para o registro da família.",
+            ),
+        )
 
-        return self._generico(requisicao, candidatos)
+    def gerar_atividades(self, plano: PlanoAula, schema: dict) -> CadernoGerado:
+        codigos = [h.codigo for h in plano.habilidades]
+        ancora = plano.identificacao.codigo_ancora
+        if ancora in codigos:
+            codigos.remove(ancora)
+        codigos = [ancora] + codigos
+        escolhidos = codigos[:5]
+        objetivos = [item for bloco in plano.objetivos for item in bloco.itens]
 
-    def _generico(self, requisicao: RequisicaoGeracao, candidatos: list[Habilidade]) -> PacoteGerado:
-        tema = _titulo(requisicao.tema)
-        faixa = "4 a 5 anos"
-        turmas = ["Pré I (4 anos)", "Pré II (5 anos)"]
-
-        campos: list[CampoExperienciaItem] = []
-        vistos: set[str] = set()
-        for habilidade in candidatos:
-            if habilidade.sigla_campo in vistos:
-                continue
-            vistos.add(habilidade.sigla_campo)
-            campos.append(
-                CampoExperienciaItem(
-                    icone=ICONES_CAMPOS.get(habilidade.campo_experiencia, "✨"),
-                    nome=habilidade.campo_experiencia,
-                    justificativa=f"O tema dialoga com este campo ao explorar {tema.lower()}.",
+        atividades: list[AtividadeGerada] = []
+        for indice, codigo in enumerate(escolhidos, start=1):
+            tipo = TIPOS_ATIVIDADE[(indice - 1) % len(TIPOS_ATIVIDADE)]
+            conteudo, titulo, enunciado = self._conteudo_por_tipo(tipo, indice)
+            atividades.append(
+                AtividadeGerada(
+                    numero=indice,
+                    titulo=titulo,
+                    enunciado=enunciado,
+                    tipo=tipo,
+                    codigo_bncc=codigo,
+                    objetivo_relacionado=objetivos[(indice - 1) % len(objetivos)],
+                    conteudo=conteudo,
                 )
             )
-            if len(campos) == 4:
-                break
-        for nome in CAMPOS_OFICIAIS:
-            if len(campos) == 4:
-                break
-            if nome not in {campo.nome for campo in campos}:
-                campos.append(
-                    CampoExperienciaItem(
-                        icone=ICONES_CAMPOS.get(nome, "✨"),
-                        nome=nome,
-                        justificativa=f"O tema dialoga com este campo ao explorar {tema.lower()}.",
-                    )
-                )
 
-        codigos = [habilidade.codigo for habilidade in candidatos]
+        usados = {atividade.objetivo_relacionado for atividade in atividades}
+        nao_trabalhados = [objetivo for objetivo in objetivos if objetivo not in usados]
+        cobertos = {atividade.codigo_bncc for atividade in atividades}
 
-        por_sigla: dict[str, list[str]] = {}
-        for habilidade in candidatos:
-            por_sigla.setdefault(habilidade.sigla_campo, []).append(habilidade.codigo)
-
-        selecionados: list[str] = []
-        indices = {sigla: 0 for sigla in por_sigla}
-        while len(selecionados) < 7:
-            avancou = False
-            for sigla in por_sigla:
-                if indices[sigla] < len(por_sigla[sigla]) and len(selecionados) < 7:
-                    selecionados.append(por_sigla[sigla][indices[sigla]])
-                    indices[sigla] += 1
-                    avancou = True
-            if not avancou:
-                break
-        habilidades = [HabilidadeSelecionada(codigo=codigo) for codigo in selecionados]
-
-        def codigo_de(sigla: str, indice: int = 0) -> str:
-            lista = por_sigla.get(sigla) or codigos
-            return lista[indice % len(lista)]
-
-        palavra = _primeira_palavra(requisicao.tema)
-        atividades = [
-            AtividadeGerada(
-                numero=1,
-                titulo="Vamos escrever!",
-                enunciado=f"Cubra as letrinhas e escreva a palavra {palavra}.",
-                tipo="cobrir_nome",
-                codigo_bncc=codigo_de("EF", 0),
-                conteudo=ConteudoAtividade(texto_para_cobrir=palavra, linhas_escrita=2),
+        return CadernoGerado(
+            capa=CapaCaderno(
+                titulo=plano.titulo,
+                subtitulo="Caderno de Atividades",
+                etapa="Educação Infantil",
+                faixa_etaria=plano.identificacao.faixa_etaria,
+                alinhamento_bncc="Alinhado à BNCC",
+                codigo_ancora=ancora,
             ),
-            AtividadeGerada(
-                numero=2,
-                titulo="Eu e o tema",
-                enunciado=f"Desenhe o que você mais gosta quando pensa em {tema.lower()}.",
-                tipo="desenhar_rosto",
-                codigo_bncc=codigo_de("EO", 0),
-                conteudo=ConteudoAtividade(
-                    frases=[
-                        "O que eu mais gosto:",
-                        "Minha cor favorita é:",
-                        "A brincadeira que eu amo é:",
-                        "O que eu aprendi hoje:",
-                    ]
-                ),
+            atividades=atividades,
+            nota_cobertura=NotaCoberturaGerada(
+                objetivos_nao_trabalhados=nao_trabalhados,
+                sugestoes_extras=[
+                    f"Habilidade não trabalhada no caderno: {codigo}."
+                    for codigo in codigos
+                    if codigo not in cobertos
+                ],
             ),
-            AtividadeGerada(
-                numero=3,
-                titulo="A letra inicial",
-                enunciado="Ligue cada desenho à letra com que o nome começa.",
-                tipo="ligar_letra_inicial",
-                codigo_bncc=codigo_de("EF", 1),
-                conteudo=ConteudoAtividade(
+        )
+
+    def _conteudo_por_tipo(self, tipo: str, indice: int):
+        if tipo == "cobrir_palavra":
+            return (
+                ConteudoAtividade(texto_para_cobrir="TEMA", linhas_escrita=2),
+                "Vamos escrever!",
+                "Cubra as letrinhas pontilhadas e escreva a palavra.",
+            )
+        if tipo == "ligar":
+            return (
+                ConteudoAtividade(
                     pares=[
                         ParLigar(palavra="ABACAXI", letra="A"),
                         ParLigar(palavra="BOLA", letra="B"),
@@ -212,14 +299,18 @@ class MockLLM:
                         ParLigar(palavra="DADO", letra="D"),
                     ]
                 ),
-            ),
-            AtividadeGerada(
-                numero=4,
-                titulo="Colorir por número",
-                enunciado="Pinte cada espaço seguindo a cor de cada número.",
-                tipo="colorir_por_numero",
-                codigo_bncc=codigo_de("TS", 0),
-                conteudo=ConteudoAtividade(
+                "Ligue os pares",
+                "Ligue cada desenho à letra com que o nome começa.",
+            )
+        if tipo == "contar":
+            return (
+                ConteudoAtividade(quantidade=5, icone_chave="bola"),
+                "Vamos contar!",
+                "Conte quantos objetos há e pinte a quantidade certa.",
+            )
+        if tipo == "colorir":
+            return (
+                ConteudoAtividade(
                     legenda_cores=[
                         ItemLegendaCor(numero=1, cor="Rosa"),
                         ItemLegendaCor(numero=2, cor="Amarelo"),
@@ -227,81 +318,39 @@ class MockLLM:
                         ItemLegendaCor(numero=4, cor="Verde"),
                     ]
                 ),
-            ),
-            AtividadeGerada(
-                numero=5,
-                titulo="O caminho",
-                enunciado="Ajude a criança a chegar ao fim do caminho.",
-                tipo="labirinto",
-                codigo_bncc=codigo_de("CG", 0) if por_sigla.get("CG") else codigo_de("ET", 0),
-                conteudo=ConteudoAtividade(rotulo_inicio="início", rotulo_fim="chegada"),
-            ),
-        ]
-
-        return PacoteGerado(
-            plano=PlanoGerado(
-                titulo=tema,
-                subtitulo=f"Educação Infantil • Pré I e Pré II • {faixa}",
-                identificacao=Identificacao(
-                    tema=tema,
-                    turmas=turmas,
-                    faixa_etaria=faixa,
-                    tempo_estimado="60 minutos",
-                    area_integradora=f"Tema integrador: {tema}",
+                "Colorir por número",
+                "Pinte cada espaço seguindo a cor de cada número.",
+            )
+        if tipo == "completar":
+            return (
+                ConteudoAtividade(sequencia=["1", "2", "3", "4", "5"], lacunas=1),
+                "Complete a sequência",
+                "Complete o que falta na sequência.",
+            )
+        if tipo == "desenhar":
+            return (
+                ConteudoAtividade(
+                    frases=["O que eu mais gosto:", "Minha cor favorita é:", "O que eu aprendi:"]
                 ),
-                campos_experiencia=campos,
-                objetivos=[
-                    ObjetivosAno(
-                        ano="Pré I",
-                        itens=[
-                            f"Reconhecer elementos do tema {tema.lower()}.",
-                            "Explorar materiais e linguagens relacionados ao tema.",
-                        ],
-                    ),
-                    ObjetivosAno(
-                        ano="Pré II",
-                        itens=[
-                            f"Representar o tema {tema.lower()} com mais autonomia.",
-                            "Comparar, contar e registrar elementos do tema.",
-                        ],
-                    ),
-                ],
-                habilidades=habilidades,
-                recursos=[
-                    Recurso(icone="🪪", descricao="Crachás e fichas com nomes."),
-                    Recurso(icone="🎨", descricao="Lápis de cor, giz de cera e canetinhas."),
-                    Recurso(icone="📄", descricao="Folhas do caderno de atividades."),
-                    Recurso(icone="✂️", descricao="Cola bastão e recortes de papel colorido."),
-                    Recurso(icone="🎵", descricao="Música e caixa surpresa."),
-                    Recurso(icone="📦", descricao="Cartaz e materiais de apoio."),
-                ],
-                desenvolvimento=[
-                    Momento(ordem=1, titulo="Acolhida", descricao="Receber as crianças chamando cada uma pelo nome.", minutos=5),
-                    Momento(ordem=2, titulo="Dinâmica de abertura", descricao="Apresentar o tema com uma caixa surpresa.", minutos=8),
-                    Momento(ordem=3, titulo="Roda de conversa", descricao="Ouvir as crianças e registrar as falas.", minutos=10),
-                    Momento(ordem=4, titulo="Exploração do tema", descricao="Comparar materiais e levantar hipóteses.", minutos=7),
-                    Momento(ordem=5, titulo="Atividade principal", descricao="Realizar as folhas do caderno com apoio do professor.", minutos=18),
-                    Momento(ordem=6, titulo="Brincadeira", descricao="Fazer uma brincadeira cantada com o tema.", minutos=8),
-                    Momento(ordem=7, titulo="Encerramento", descricao="Mostrar as produções e conversar sobre o que aprenderam.", minutos=4),
-                ],
-                dica="Ajuste os tempos conforme a rotina da turma e o ritmo das crianças.",
-                brincadeira_casa=BrincadeiraCasa(
-                    titulo="Levar o tema para casa",
-                    descricao="Convidar a família a conversar sobre o tema e registrar uma descoberta.",
-                    organizacao="Enviar uma folha simples para o registro da família.",
-                ),
-            ),
-            caderno=CadernoGerado(
-                capa=CapaCaderno(
-                    titulo=tema,
-                    subtitulo="Caderno de Atividades",
-                    etapa="Educação Infantil",
-                    faixa_etaria="Pré I e Pré II • 4 a 5 anos",
-                    alinhamento_bncc="Alinhado à BNCC",
-                ),
-                atividades=atividades,
-            ),
+                "Desenhe e conte",
+                "Desenhe o que você aprendeu sobre o tema.",
+            )
+        if tipo == "labirinto":
+            return (
+                ConteudoAtividade(rotulo_inicio="início", rotulo_fim="chegada"),
+                "O caminho",
+                "Ajude a criança a chegar ao fim do caminho.",
+            )
+        return (
+            ConteudoAtividade(itens_recortar=["círculo", "quadrado", "triângulo"]),
+            "Recorte e cole",
+            "Recorte as formas e cole no lugar certo.",
         )
+
+
+# ---------------------------------------------------------------------------
+# OpenAI / compatível
+# ---------------------------------------------------------------------------
 
 
 def _extrair_json(texto: str) -> str:
@@ -316,24 +365,33 @@ def _extrair_json(texto: str) -> str:
     return texto[inicio : fim + 1]
 
 
-def _prompt_usuario(requisicao: RequisicaoGeracao, candidatos: list[Habilidade]) -> str:
+def _prompt_plano(requisicao: RequisicaoGeracao, candidatos: list[Habilidade]) -> str:
     lista = [
         {
-            "codigo": habilidade.codigo,
-            "grupo_etario": habilidade.grupo_etario,
-            "campo_experiencia": habilidade.campo_experiencia,
-            "objetivo": habilidade.objetivo,
+            "codigo": h.codigo,
+            "campo_experiencia": h.campo_experiencia,
+            "objetivo": h.objetivo,
         }
-        for habilidade in candidatos
+        for h in candidatos
     ]
     return (
         "Pedido do professor:\n"
-        f"- Uso escolar: {requisicao.uso_escolar}\n"
-        f"- Tema: {requisicao.tema}\n"
-        f"- Observações: {requisicao.observacoes or 'nenhuma'}\n"
-        f"- Quantidade de atividades: {requisicao.quantidade_atividades}\n\n"
-        "Candidatos da BNCC (use somente estes códigos):\n"
+        f"- Turma: {requisicao.uso_escolar}\n"
+        f"- Código âncora: {requisicao.codigo_ancora}\n"
+        f"- Observações: {requisicao.observacoes or 'nenhuma'}\n\n"
+        "Os 7 códigos candidatos (use somente estes; não invente códigos):\n"
         f"{json.dumps(lista, ensure_ascii=False, indent=2)}\n"
+    )
+
+
+def _prompt_atividades(plano: PlanoAula) -> str:
+    return (
+        "Plano validado pelo professor:\n"
+        f"{plano.model_dump_json(indent=2)}\n\n"
+        "Gere exatamente 5 atividades. O código âncora precisa estar em pelo menos "
+        "uma delas. Use apenas códigos do plano. Copie o objetivo relacionado "
+        "verbatim de um dos objetivos do plano. Liste na nota o que não foi "
+        "trabalhado e o que é sugestão extra."
     )
 
 
@@ -350,22 +408,14 @@ class OpenAICompativel:
     ) -> None:
         self.base_url = (base_url or os.getenv("LLM_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
         self.api_key = api_key or os.getenv("LLM_API_KEY")
-        self.model = model or os.getenv("LLM_MODEL") or "gpt-4o-mini"
+        self.model = model or os.getenv("LLM_MODEL") or "gpt-4o"
         if not self.api_key:
             raise ErroLLM("LLM_API_KEY não configurada.")
 
-    def gerar_pacote(
-        self,
-        requisicao: RequisicaoGeracao,
-        candidatos: list[Habilidade],
-        schema: dict,
-    ) -> PacoteGerado:
-        system = PROMPT_SISTEMA.read_text(encoding="utf-8")
-        user = _prompt_usuario(requisicao, candidatos)
-
+    def _chamar(self, system: str, user: str, schema: dict) -> str:
         payload = {
             "model": self.model,
-            "temperature": 0.4,
+            "temperature": 0.3,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -373,42 +423,63 @@ class OpenAICompativel:
             "response_format": {
                 "type": "json_schema",
                 "json_schema": {
-                    "name": "pacote_aula",
+                    "name": "material_bncc",
                     "schema": schema,
                     "strict": False,
                 },
             },
         }
-
         cabecalhos = {"Authorization": f"Bearer {self.api_key}"}
 
         with httpx.Client(timeout=180) as cliente:
-            resposta = cliente.post(
-                f"{self.base_url}/chat/completions",
-                headers=cabecalhos,
-                json=payload,
-            )
-            if resposta.status_code >= 400 and "response_format" in resposta.text:
-                payload["response_format"] = {"type": "json_object"}
+            for tentativa in range(2):
                 resposta = cliente.post(
                     f"{self.base_url}/chat/completions",
                     headers=cabecalhos,
                     json=payload,
                 )
-            if resposta.status_code >= 400:
-                raise ErroLLM(f"Provedor de IA retornou {resposta.status_code}: {resposta.text[:400]}")
+                if resposta.status_code == 429 and tentativa == 0:
+                    espera = int(resposta.headers.get("retry-after", "5"))
+                    time.sleep(min(espera, 15))
+                    continue
+                if resposta.status_code >= 400 and "response_format" in resposta.text:
+                    payload["response_format"] = {"type": "json_object"}
+                    resposta = cliente.post(
+                        f"{self.base_url}/chat/completions",
+                        headers=cabecalhos,
+                        json=payload,
+                    )
+                if resposta.status_code >= 400:
+                    raise ErroLLM(f"Provedor retornou {resposta.status_code}: {resposta.text[:400]}")
+                dados = resposta.json()
+                try:
+                    return dados["choices"][0]["message"]["content"]
+                except (KeyError, IndexError, TypeError) as erro:
+                    raise ErroLLM(f"Resposta inesperada do provedor: {dados}") from erro
+        raise ErroLLM("Não foi possível obter resposta do provedor.")
 
-            dados = resposta.json()
-
+    def gerar_plano(
+        self,
+        requisicao: RequisicaoGeracao,
+        candidatos: list[Habilidade],
+        schema: dict,
+    ) -> PlanoGerado:
+        system = PROMPT_PLANO.read_text(encoding="utf-8")
+        user = _prompt_plano(requisicao, candidatos)
+        conteudo = self._chamar(system, user, schema)
         try:
-            conteudo = dados["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as erro:
-            raise ErroLLM(f"Resposta inesperada do provedor: {dados}") from erro
-
-        try:
-            return PacoteGerado.model_validate_json(_extrair_json(conteudo))
+            return PlanoGerado.model_validate_json(_extrair_json(conteudo))
         except Exception as erro:
-            raise ErroLLM(f"JSON inválido devolvido pelo provedor: {erro}") from erro
+            raise ErroLLM(f"Plano inválido devolvido pelo provedor: {erro}") from erro
+
+    def gerar_atividades(self, plano: PlanoAula, schema: dict) -> CadernoGerado:
+        system = PROMPT_ATIVIDADES.read_text(encoding="utf-8")
+        user = _prompt_atividades(plano)
+        conteudo = self._chamar(system, user, schema)
+        try:
+            return CadernoGerado.model_validate_json(_extrair_json(conteudo))
+        except Exception as erro:
+            raise ErroLLM(f"Caderno inválido devolvido pelo provedor: {erro}") from erro
 
 
 def obter_cliente() -> LLMClient:

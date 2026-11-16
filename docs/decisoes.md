@@ -45,8 +45,14 @@
 | D-019 | Tema do demo: "Meu nome, minha identidade" | provisória |
 | D-020 | Ícones/emoji antes de imagem generativa | aceita |
 | D-021 | Biblioteca estática agora; runtime depois | provisória |
-| D-022 | Vercel em modo demo one-shot (ZIP, sem histórico) | provisória |
-| D-023 | Groq free para o texto do teste | provisória |
+| D-022 | Vercel em modo demo one-shot (ZIP, sem histórico) | substituída por D-026 |
+| D-023 | Groq free para o texto do teste | substituída por D-028 |
+| D-024 | Entrada por código âncora + 6 relacionados | aceita |
+| D-025 | 7 códigos, 4 campos, 10 seções e 6–8 recursos | aceita |
+| D-026 | Duas etapas: plano → validação → atividades | aceita |
+| D-027 | Nota de cobertura no fim do PPT | aceita |
+| D-028 | OpenAI gpt-4o para gerar e gpt-4o-mini para verificar | provisória |
+| D-029 | 8 tipos genéricos de atividade | aceita |
 
 ---
 
@@ -275,6 +281,71 @@
   aceite ou o volume crescer.
 - **Status:** provisória.
 
+### D-024 — Entrada por código âncora + 6 relacionados
+
+- **Contexto:** o professor precisa partir de um código oficial, não de um tema
+  livre; o modelo do cliente usa 7 códigos no plano.
+- **Decisão:** o professor escolhe turma + 1 código âncora; o sistema seleciona
+  6 relacionados em `data/bncc`, mesmo campo primeiro, depois mesma turma, até
+  7 códigos e 4 campos.
+- **Consequência:** tudo ancorado na base; o título/tema vem da descrição
+  oficial do âncora.
+- **Reabrir se:** o cliente pedir múltiplos códigos simultâneos ou tema livre.
+- **Status:** aceita.
+
+### D-025 — 7 códigos, 4 campos, 10 seções e 6–8 recursos
+
+- **Contexto:** o modelo do cliente tem 10 seções, 7 códigos, 4 campos, 8
+  recursos e 7 momentos.
+- **Decisão:** o plano segue essa estrutura; a avaliação, as adaptações e as
+  observações entram como seções 08, 09 e 10.
+- **Consequência:** fidelidade ao modelo; planos mais longos.
+- **Reabrir se:** o cliente reduzir o formato.
+- **Status:** aceita.
+
+### D-026 — Duas etapas: plano → validação → atividades
+
+- **Contexto:** o PPT só pode existir a partir do plano validado pelo professor.
+- **Decisão:** o plano é gerado e exibido primeiro; o botão "Validar plano"
+  libera a geração das atividades. O plano JSON fica no navegador; sem estado
+  no servidor.
+- **Consequência:** fluxo fiel ao processo pedagógico; funciona no Vercel sem
+  disco nem SQLite.
+- **Reabrir se:** for necessário persistir planos entre sessões.
+- **Status:** aceita.
+
+### D-027 — Nota de cobertura no fim do PPT
+
+- **Contexto:** o modelo tem 7 códigos e 5 atividades; alguns códigos ficam sem
+  atividade, e o professor precisa saber o que não foi trabalhado.
+- **Decisão:** o PPT termina com um slide "Nota para o professor" listando
+  códigos/objetivos não trabalhados e sugestões extras. O slide é opcional.
+- **Consequência:** transparência; o professor decide manter ou remover.
+- **Reabrir se:** o cliente não quiser a nota no material final.
+- **Status:** aceita.
+
+### D-028 — OpenAI gpt-4o e gpt-4o-mini
+
+- **Contexto:** o mock não serve para validação pedagógica; o Groq free tem TPM
+  de 8K e aperta uma geração completa.
+- **Decisão:** `gpt-4o` para gerar o plano e as atividades; `gpt-4o-mini` para o
+  verificador (a implementar). O cliente continua compatível com outros
+  provedores.
+- **Consequência:** melhor qualidade e structured outputs; custo maior que o
+  mock.
+- **Reabrir se:** o custo ou a latência não couberem no piloto.
+- **Status:** provisória.
+
+### D-029 — 8 tipos genéricos de atividade
+
+- **Contexto:** o fluxo por código precisa funcionar com temas diferentes; os 5
+  tipos do modelo eram específicos de "Meu nome".
+- **Decisão:** `cobrir_palavra`, `ligar`, `contar`, `colorir`, `completar`,
+  `desenhar`, `labirinto`, `recortar_colar`. O modelo escolhe 5.
+- **Consequência:** cobre mais temas; alguns layouts ainda são simples.
+- **Reabrir se:** o cliente exigir tipos específicos por campo.
+- **Status:** aceita.
+
 ---
 
 ## Nova decisão (modelo)
@@ -296,3 +367,4 @@
 | 2026-11-15 | Registro inicial das decisões do MVP. |
 | 2026-11-15 | Ícones/emoji na atividade de ligar e biblioteca estática (D-020, D-021). |
 | 2026-11-15 | Deploy Vercel one-shot e Groq free para o teste (D-022, D-023). |
+| 2026-11-15 | Fluxo por código, duas etapas, 10 seções e nota de cobertura (D-024 a D-029). |

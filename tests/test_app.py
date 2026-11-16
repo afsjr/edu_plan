@@ -1,62 +1,67 @@
+import html
+import re
+
 from fastapi.testclient import TestClient
 
-from app import storage
 from app.main import app
 
 
-def test_fluxo_completo(tmp_path, monkeypatch):
-    monkeypatch.setattr(storage, "STORAGE", tmp_path)
-    monkeypatch.setattr(storage, "GERACOES", tmp_path / "geracoes")
-    monkeypatch.setattr(storage, "BANCO", tmp_path / "historico.db")
-
-    cliente = TestClient(app)
-
-    assert cliente.get("/").status_code == 200
-    assert cliente.get("/bncc").status_code == 200
-    assert cliente.get("/historico").status_code == 200
-    assert cliente.get("/saude").json()["base"]["total"] == 93
-
-    resposta = cliente.post(
-        "/gerar",
-        data={"uso": "Pré II", "tema": "Meu nome, minha identidade"},
-        follow_redirects=False,
+def _json_do_campo(texto: str, nome: str) -> str:
+    casamento = re.search(
+        rf'<textarea name="{nome}" hidden>(.*?)</textarea>',
+        texto,
+        re.S,
     )
-    assert resposta.status_code == 303
+    assert casamento is not None, f"campo {nome} não encontrado"
+    return html.unescape(casamento.group(1))
 
-    local = resposta.headers["location"]
-    assert local.startswith("/resultado/")
-    geracao_id = local.rsplit("/", 1)[-1]
 
-    resultado = cliente.get(local)
-    assert resultado.status_code == 200
-    assert "Baixar plano" in resultado.text
-    assert "Baixar caderno" in resultado.text
+def test_fluxo_completo():
+    cliente = TestClient(app)
 
-    plano = cliente.get(f"/download/{geracao_id}/plano")
+    inicio = cliente.get("/")
+    assert inicio.status_code == 200
+    assert "Código BNCC" in inicio.text
+
+    plano = cliente.post(
+        "/gerar-plano",
+        data={"uso": "Pré II", "codigo": "EI03EF01"},
+    )
     assert plano.status_code == 200
-    assert plano.headers["content-type"].endswith("wordprocessingml.document")
-    assert len(plano.content) > 10_000
+    assert "Validar plano e gerar atividades" in plano.text
+    plano_json = _json_do_campo(plano.text, "plano_json")
 
-    caderno = cliente.get(f"/download/{geracao_id}/caderno")
-    assert caderno.status_code == 200
-    assert caderno.headers["content-type"].endswith("presentationml.presentation")
-    assert len(caderno.content) > 10_000
+    atividades = cliente.post("/gerar-atividades", data={"plano_json": plano_json})
+    assert atividades.status_code == 200
+    assert "Nota de cobertura" in atividades.text
+    caderno_json = _json_do_campo(atividades.text, "caderno_json")
 
-    filtro = cliente.get("/bncc", params={"grupo": "EI03", "campo": "EF", "texto": "escrita"})
-    assert filtro.status_code == 200
-    assert "EI03EF01" in filtro.text
+    docx = cliente.post("/baixar-plano", data={"plano_json": plano_json})
+    assert docx.status_code == 200
+    assert docx.headers["content-type"].endswith("wordprocessingml.document")
+    assert len(docx.content) > 10_000
+
+    pptx = cliente.post("/baixar-atividades", data={"caderno_json": caderno_json})
+    assert pptx.status_code == 200
+    assert pptx.headers["content-type"].endswith("presentationml.presentation")
+    assert len(pptx.content) > 10_000
 
 
-def test_tema_vazio_e_rejeitado(tmp_path, monkeypatch):
-    monkeypatch.setattr(storage, "STORAGE", tmp_path)
-    monkeypatch.setattr(storage, "GERACOES", tmp_path / "geracoes")
-    monkeypatch.setattr(storage, "BANCO", tmp_path / "historico.db")
-
+def test_codigo_invalido():
     cliente = TestClient(app)
     resposta = cliente.post(
-        "/gerar",
-        data={"uso": "Pré II", "tema": "   "},
-        follow_redirects=False,
+        "/gerar-plano",
+        data={"uso": "Pré II", "codigo": "EI03XX99"},
     )
     assert resposta.status_code == 400
-    assert "Descreva o tema" in resposta.text
+    assert "não possuo esta informação" in resposta.text.lower()
+
+
+def test_codigo_de_outra_turma():
+    cliente = TestClient(app)
+    resposta = cliente.post(
+        "/gerar-plano",
+        data={"uso": "Pré II", "codigo": "EI01EF01"},
+    )
+    assert resposta.status_code == 400
+    assert "não pertence à turma" in resposta.text.lower()

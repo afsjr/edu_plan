@@ -1,25 +1,25 @@
-"""Aplicação FastAPI do MVP: gerar o pacote, consultar a BNCC e baixar arquivos."""
+"""Aplicação FastAPI: código BNCC → plano → validação → atividades."""
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import re
+import tempfile
 import unicodedata
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import storage
-from app.bncc import CAMPOS, GRUPOS, BaseBNCC
+from app.bncc import CAMPOS, GRUPOS, BaseBNCC, CodigoNaoEncontrado
 from app.config import carregar_env
-from app.contract import ErroContrato
+from app.contract import CadernoAtividades, ErroContrato, PlanoAula
 from app.llm import ErroLLM, RequisicaoGeracao, obter_cliente
-from app.pipeline import gerar_e_salvar, gerar_zip
+from app.pipeline import gerar_atividades, gerar_plano
+from app.render_docx import render_plano
+from app.render_pptx import render_caderno
 
 carregar_env()
 
@@ -27,7 +27,6 @@ RAIZ = Path(__file__).resolve().parents[1]
 TEMPLATES = RAIZ / "app" / "templates"
 ESTATICOS = RAIZ / "app" / "static"
 
-TEMA_PADRAO = "Meu nome, minha identidade"
 USOS = ["Pré I", "Pré II"]
 
 MEDIA_TYPES = {
@@ -37,11 +36,12 @@ MEDIA_TYPES = {
 
 logger = logging.getLogger("plano_aula")
 
-app = FastAPI(title="Plano de Aula BNCC", version="0.1.0")
+app = FastAPI(title="Plano de Aula BNCC", version="0.2.0")
 app.mount("/static", StaticFiles(directory=ESTATICOS), name="static")
 templates = Jinja2Templates(directory=TEMPLATES)
 
 base_bncc = BaseBNCC()
+CODIGOS = base_bncc.buscar(grupo="EI03")
 
 
 def slug(texto: str) -> str:
@@ -53,161 +53,124 @@ def slug(texto: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", sem_acento).strip("-")[:60] or "material"
 
 
-def modo_demo() -> bool:
-    """No Vercel não há disco persistente: o modo demo devolve um ZIP."""
-    return os.getenv("VERCEL_DEMO") == "1"
-
-
-def _contexto_base(request: Request, **extra) -> dict:
-    contexto = {
+def _contexto_index(
+    request: Request,
+    erro: str | None = None,
+    uso: str = "Pré II",
+    codigo: str = "",
+    observacoes: str = "",
+) -> dict:
+    return {
         "request": request,
         "usos": USOS,
-        "tema_padrao": TEMA_PADRAO,
+        "codigos": CODIGOS,
+        "uso_padrao": uso,
+        "codigo_padrao": codigo,
+        "observacoes_padrao": observacoes,
+        "erro": erro,
         "provedor": getattr(obter_cliente(), "nome", "desconhecido"),
-        "erro": None,
-        "modo_demo": modo_demo(),
-        "recentes": [] if modo_demo() else storage.listar(5),
     }
-    contexto.update(extra)
-    return contexto
 
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(request, "index.html", _contexto_base(request))
+    return templates.TemplateResponse(request, "index.html", _contexto_index(request))
 
 
-@app.post("/gerar")
-def gerar(
+@app.post("/gerar-plano", response_class=HTMLResponse)
+def gerar_plano_route(
     request: Request,
     uso: str = Form(...),
-    tema: str = Form(...),
+    codigo: str = Form(...),
     observacoes: str = Form(""),
 ):
-    tema = tema.strip()[:120]
-    observacoes = observacoes.strip()[:500]
-
-    if not tema:
-        return templates.TemplateResponse(
-            request,
-            "index.html",
-            _contexto_base(request, erro="Descreva o tema da aula."),
-            status_code=400,
-        )
-
     requisicao = RequisicaoGeracao(
         uso_escolar=uso,
-        tema=tema,
-        observacoes=observacoes,
+        codigo_ancora=codigo.strip().upper(),
+        observacoes=observacoes.strip()[:500],
     )
-
     try:
-        if modo_demo():
-            conteudo = gerar_zip(requisicao)
-            nome = f"pacote_{slug(tema)}.zip"
-            return Response(
-                content=conteudo,
-                media_type="application/zip",
-                headers={"Content-Disposition": f'attachment; filename="{nome}"'},
-            )
-
-        resultado = gerar_e_salvar(requisicao)
-    except (ErroContrato, ErroLLM, ValueError) as erro:
-        logger.warning("Falha na geração: %s", erro)
+        plano = gerar_plano(requisicao)
+    except (CodigoNaoEncontrado, ErroContrato, ErroLLM, ValueError) as erro:
+        logger.warning("Falha ao gerar plano: %s", erro)
         return templates.TemplateResponse(
             request,
             "index.html",
-            _contexto_base(
-                request,
-                erro=str(erro),
-                tema_padrao=tema,
-            ),
+            _contexto_index(request, erro=str(erro), uso=uso, codigo=codigo, observacoes=observacoes),
             status_code=400,
         )
-    except Exception:  # pragma: no cover - proteção para o demo
-        logger.exception("Erro inesperado na geração")
+
+    return templates.TemplateResponse(
+        request,
+        "plano.html",
+        {
+            "request": request,
+            "plano": plano,
+            "plano_json": plano.model_dump_json(),
+            "provedor": getattr(obter_cliente(), "nome", "desconhecido"),
+        },
+    )
+
+
+@app.post("/gerar-atividades", response_class=HTMLResponse)
+def gerar_atividades_route(request: Request, plano_json: str = Form(...)):
+    try:
+        plano = PlanoAula.model_validate_json(plano_json)
+        caderno = gerar_atividades(plano)
+    except (ErroContrato, ErroLLM, ValueError) as erro:
+        logger.warning("Falha ao gerar atividades: %s", erro)
         return templates.TemplateResponse(
             request,
             "index.html",
-            _contexto_base(
-                request,
-                erro="Não foi possível gerar o material. Tente novamente.",
-                tema_padrao=tema,
-            ),
-            status_code=500,
+            _contexto_index(request, erro=str(erro)),
+            status_code=400,
         )
 
-    return RedirectResponse(url=f"/resultado/{resultado['id']}", status_code=303)
+    return templates.TemplateResponse(
+        request,
+        "atividades.html",
+        {
+            "request": request,
+            "plano": plano,
+            "caderno": caderno,
+            "caderno_json": caderno.model_dump_json(),
+            "provedor": getattr(obter_cliente(), "nome", "desconhecido"),
+        },
+    )
 
 
-def _carregar_pacote(caminho_plano: str) -> dict | None:
-    caminho = Path(caminho_plano).parent / "pacote.json"
-    if not caminho.exists():
-        return None
+def _baixar(conteudo: bytes, nome: str, media_type: str) -> Response:
+    return Response(
+        content=conteudo,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{nome}"'},
+    )
+
+
+@app.post("/baixar-plano")
+def baixar_plano(plano_json: str = Form(...)):
     try:
-        return json.loads(caminho.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return None
+        plano = PlanoAula.model_validate_json(plano_json)
+    except ValueError as erro:
+        raise HTTPException(status_code=400, detail="Plano inválido.") from erro
+
+    with tempfile.TemporaryDirectory() as temporario:
+        caminho = render_plano(plano, Path(temporario) / "plano_aula.docx")
+        conteudo = caminho.read_bytes()
+    return _baixar(conteudo, f"plano_{slug(plano.titulo)}.docx", MEDIA_TYPES[".docx"])
 
 
-@app.get("/resultado/{geracao_id}", response_class=HTMLResponse)
-def resultado(request: Request, geracao_id: str):
-    if modo_demo():
-        raise HTTPException(status_code=404, detail="O modo demonstração não guarda histórico.")
+@app.post("/baixar-atividades")
+def baixar_atividades(caderno_json: str = Form(...)):
+    try:
+        caderno = CadernoAtividades.model_validate_json(caderno_json)
+    except ValueError as erro:
+        raise HTTPException(status_code=400, detail="Caderno inválido.") from erro
 
-    registro = storage.obter(geracao_id)
-    if not registro:
-        raise HTTPException(status_code=404, detail="Geração não encontrada.")
-
-    pacote = _carregar_pacote(registro["caminho_plano"])
-
-    return templates.TemplateResponse(
-        request,
-        "resultado.html",
-        {
-            "request": request,
-            "registro": registro,
-            "pacote": pacote,
-        },
-    )
-
-
-@app.get("/historico", response_class=HTMLResponse)
-def historico(request: Request):
-    return templates.TemplateResponse(
-        request,
-        "historico.html",
-        {
-            "request": request,
-            "modo_demo": modo_demo(),
-            "geracoes": [] if modo_demo() else storage.listar(100),
-        },
-    )
-
-
-@app.get("/download/{geracao_id}/{tipo}")
-def download(geracao_id: str, tipo: str):
-    if modo_demo():
-        raise HTTPException(status_code=404, detail="O modo demonstração não guarda histórico.")
-
-    if tipo not in {"plano", "caderno"}:
-        raise HTTPException(status_code=404, detail="Arquivo desconhecido.")
-
-    registro = storage.obter(geracao_id)
-    if not registro:
-        raise HTTPException(status_code=404, detail="Geração não encontrada.")
-
-    chave = "caminho_plano" if tipo == "plano" else "caminho_caderno"
-    caminho = Path(registro[chave])
-    if not caminho.exists():
-        raise HTTPException(status_code=404, detail="Arquivo não encontrado no disco.")
-
-    nome = f"{tipo}_{slug(registro['tema'])}{caminho.suffix}"
-    return FileResponse(
-        caminho,
-        media_type=MEDIA_TYPES.get(caminho.suffix, "application/octet-stream"),
-        filename=nome,
-    )
+    with tempfile.TemporaryDirectory() as temporario:
+        caminho = render_caderno(caderno, Path(temporario) / "caderno_atividades.pptx")
+        conteudo = caminho.read_bytes()
+    return _baixar(conteudo, f"atividades_{slug(caderno.capa.titulo)}.pptx", MEDIA_TYPES[".pptx"])
 
 
 @app.get("/bncc", response_class=HTMLResponse)

@@ -43,6 +43,10 @@ def normalizar(texto: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", sem_acento).strip()
 
 
+class CodigoNaoEncontrado(ValueError):
+    """O código não existe na base ou não pertence à turma solicitada."""
+
+
 @dataclass(frozen=True)
 class Habilidade:
     ordem: int
@@ -214,6 +218,102 @@ class BaseBNCC:
         texto: str | None = None,
     ) -> list[Habilidade]:
         return self.buscar(uso_escolar=uso_escolar, campo=campo, texto=texto)
+
+    def selecionar_codigos(
+        self,
+        ancora: str,
+        uso_escolar: str,
+        total: int = 7,
+        campos: int = 4,
+    ) -> list[Habilidade]:
+        """Código âncora + relacionados, sempre dentro de data/bncc.
+
+        Regra: mesmo campo primeiro; depois um código por outro campo até
+        fechar a quantidade de campos; por fim, completa até o total.
+        """
+        ancora_h = self.por_codigo(ancora)
+        if ancora_h is None:
+            raise CodigoNaoEncontrado(
+                f"Não possuo esta informação na minha base de dados: {ancora!r}."
+            )
+
+        grupo = self._resolver_grupo(uso_escolar)
+        if ancora_h.grupo_codigo != grupo:
+            raise CodigoNaoEncontrado(
+                f"O código {ancora_h.codigo} não pertence à turma {uso_escolar}."
+            )
+
+        candidatos = [
+            habilidade
+            for habilidade in self._habilidades
+            if habilidade.grupo_codigo == grupo and habilidade.codigo != ancora_h.codigo
+        ]
+        tokens_ancora = set(normalizar(ancora_h.objetivo).split())
+
+        def pontuacao(habilidade: Habilidade) -> tuple[int, str]:
+            tokens = set(normalizar(habilidade.objetivo).split())
+            return (-len(tokens_ancora & tokens), habilidade.codigo)
+
+        selecionados: list[Habilidade] = [ancora_h]
+        usados = {ancora_h.codigo}
+
+        # 1) mesmo campo, até 3 no total (âncora + 2)
+        mesmo_campo = sorted(
+            [h for h in candidatos if h.sigla_campo == ancora_h.sigla_campo],
+            key=pontuacao,
+        )
+        for habilidade in mesmo_campo:
+            if len(selecionados) >= min(3, total):
+                break
+            if habilidade.codigo not in usados:
+                selecionados.append(habilidade)
+                usados.add(habilidade.codigo)
+
+        # 2) outros campos, um por campo, até fechar a quantidade de campos
+        por_campo: dict[str, list[Habilidade]] = {}
+        for habilidade in candidatos:
+            if habilidade.codigo in usados:
+                continue
+            por_campo.setdefault(habilidade.sigla_campo, []).append(habilidade)
+
+        for sigla in sorted(por_campo):
+            if len({h.sigla_campo for h in selecionados}) >= campos:
+                break
+            if sigla == ancora_h.sigla_campo:
+                continue
+            melhor = sorted(por_campo[sigla], key=pontuacao)[0]
+            if melhor.codigo not in usados:
+                selecionados.append(melhor)
+                usados.add(melhor.codigo)
+
+        # 3) completa até o total, preferindo campos já presentes
+        campos_atuais = {h.sigla_campo for h in selecionados}
+        restantes = sorted(
+            [
+                h
+                for h in candidatos
+                if h.codigo not in usados and h.sigla_campo in campos_atuais
+            ],
+            key=pontuacao,
+        )
+        for habilidade in restantes:
+            if len(selecionados) >= total:
+                break
+            selecionados.append(habilidade)
+            usados.add(habilidade.codigo)
+
+        if len(selecionados) < total:
+            restantes = sorted(
+                [h for h in candidatos if h.codigo not in usados],
+                key=pontuacao,
+            )
+            for habilidade in restantes:
+                if len(selecionados) >= total:
+                    break
+                selecionados.append(habilidade)
+                usados.add(habilidade.codigo)
+
+        return selecionados[:total]
 
     def codigos(self) -> list[str]:
         return [habilidade.codigo for habilidade in self._habilidades]

@@ -44,3 +44,26 @@ def test_por_codigo_traz_texto_oficial(base):
 def test_grupo_invalido_falha(base):
     with pytest.raises(ValueError):
         base.buscar(grupo="Pré III")
+
+
+def test_seleciona_ancora_e_relacionados(base):
+    selecionados = base.selecionar_codigos("EI03EF01", "Pré II")
+    assert len(selecionados) == 7
+    assert selecionados[0].codigo == "EI03EF01"
+    assert len({h.sigla_campo for h in selecionados}) == 4
+    assert all(h.codigo.startswith("EI03") for h in selecionados)
+    assert all(base.por_codigo(h.codigo) is not None for h in selecionados)
+
+
+def test_ancora_inexistente(base):
+    from app.bncc import CodigoNaoEncontrado
+
+    with pytest.raises(CodigoNaoEncontrado):
+        base.selecionar_codigos("EI03XX99", "Pré II")
+
+
+def test_ancora_de_outra_turma(base):
+    from app.bncc import CodigoNaoEncontrado
+
+    with pytest.raises(CodigoNaoEncontrado):
+        base.selecionar_codigos("EI01EF01", "Pré II")

@@ -1,0 +1,340 @@
+{
+  "$defs": {
+    "AtividadeGerada": {
+      "properties": {
+        "numero": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Numero",
+          "type": "integer"
+        },
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "enunciado": {
+          "title": "Enunciado",
+          "type": "string"
+        },
+        "tipo": {
+          "enum": [
+            "cobrir_palavra",
+            "ligar",
+            "contar",
+            "colorir",
+            "completar",
+            "desenhar",
+            "labirinto",
+            "recortar_colar"
+          ],
+          "title": "Tipo",
+          "type": "string"
+        },
+        "codigo_bncc": {
+          "description": "Código existente no plano",
+          "title": "Codigo Bncc",
+          "type": "string"
+        },
+        "objetivo_relacionado": {
+          "description": "Objetivo do plano, copiado verbatim",
+          "title": "Objetivo Relacionado",
+          "type": "string"
+        },
+        "conteudo": {
+          "$ref": "#/$defs/ConteudoAtividade"
+        },
+        "gabarito": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gabarito"
+        }
+      },
+      "required": [
+        "numero",
+        "titulo",
+        "enunciado",
+        "tipo",
+        "codigo_bncc",
+        "objetivo_relacionado"
+      ],
+      "title": "AtividadeGerada",
+      "type": "object"
+    },
+    "CapaCaderno": {
+      "properties": {
+        "titulo": {
+          "title": "Titulo",
+          "type": "string"
+        },
+        "subtitulo": {
+          "title": "Subtitulo",
+          "type": "string"
+        },
+        "etapa": {
+          "title": "Etapa",
+          "type": "string"
+        },
+        "faixa_etaria": {
+          "title": "Faixa Etaria",
+          "type": "string"
+        },
+        "alinhamento_bncc": {
+          "title": "Alinhamento Bncc",
+          "type": "string"
+        },
+        "codigo_ancora": {
+          "title": "Codigo Ancora",
+          "type": "string"
+        }
+      },
+      "required": [
+        "titulo",
+        "subtitulo",
+        "etapa",
+        "faixa_etaria",
+        "alinhamento_bncc",
+        "codigo_ancora"
+      ],
+      "title": "CapaCaderno",
+      "type": "object"
+    },
+    "ConteudoAtividade": {
+      "properties": {
+        "texto_para_cobrir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Texto Para Cobrir"
+        },
+        "linhas_escrita": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Linhas Escrita"
+        },
+        "frases": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Frases",
+          "type": "array"
+        },
+        "pares": {
+          "items": {
+            "$ref": "#/$defs/ParLigar"
+          },
+          "title": "Pares",
+          "type": "array"
+        },
+        "legenda_cores": {
+          "items": {
+            "$ref": "#/$defs/ItemLegendaCor"
+          },
+          "title": "Legenda Cores",
+          "type": "array"
+        },
+        "rotulo_inicio": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotulo Inicio"
+        },
+        "rotulo_fim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotulo Fim"
+        },
+        "quantidade": {
+          "anyOf": [
+            {
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quantidade"
+        },
+        "icone_chave": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Chave da biblioteca de ícones, ex.: abacaxi",
+          "title": "Icone Chave"
+        },
+        "sequencia": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sequencia",
+          "type": "array"
+        },
+        "lacunas": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lacunas"
+        },
+        "itens_recortar": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Itens Recortar",
+          "type": "array"
+        },
+        "elementos_extras": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Elementos Extras",
+          "type": "array"
+        }
+      },
+      "title": "ConteudoAtividade",
+      "type": "object"
+    },
+    "ItemLegendaCor": {
+      "properties": {
+        "numero": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Numero",
+          "type": "integer"
+        },
+        "cor": {
+          "title": "Cor",
+          "type": "string"
+        }
+      },
+      "required": [
+        "numero",
+        "cor"
+      ],
+      "title": "ItemLegendaCor",
+      "type": "object"
+    },
+    "NotaCoberturaGerada": {
+      "properties": {
+        "objetivos_nao_trabalhados": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Objetivos Nao Trabalhados",
+          "type": "array"
+        },
+        "sugestoes_extras": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Sugestoes Extras",
+          "type": "array"
+        }
+      },
+      "title": "NotaCoberturaGerada",
+      "type": "object"
+    },
+    "ParLigar": {
+      "properties": {
+        "palavra": {
+          "title": "Palavra",
+          "type": "string"
+        },
+        "letra": {
+          "title": "Letra",
+          "type": "string"
+        },
+        "icone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Icone"
+        }
+      },
+      "required": [
+        "palavra",
+        "letra"
+      ],
+      "title": "ParLigar",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "capa": {
+      "$ref": "#/$defs/CapaCaderno"
+    },
+    "atividades": {
+      "items": {
+        "$ref": "#/$defs/AtividadeGerada"
+      },
+      "minItems": 1,
+      "title": "Atividades",
+      "type": "array"
+    },
+    "nota_cobertura": {
+      "$ref": "#/$defs/NotaCoberturaGerada"
+    }
+  },
+  "required": [
+    "capa",
+    "atividades"
+  ],
+  "title": "CadernoGerado",
+  "type": "object"
+}

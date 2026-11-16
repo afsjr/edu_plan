@@ -30,6 +30,7 @@ AZUL_ESCURO = "1B6CA8"
 CINZA_CLARO = "F4F5F8"
 CINZA_TEXTO = "6E6E80"
 CINZA_ESCURO = "2E2E3A"
+CINZA_LINHA = "C9C9D2"
 BRANCO = "FFFFFF"
 
 FONTE = "Arial"
@@ -112,6 +113,23 @@ def _texto_celula(
         executar.font.size = Pt(tamanho)
         executar.font.bold = negrito
         executar.font.color.rgb = _rgb(cor)
+
+
+def _paragrafo_texto(
+    doc,
+    texto: str,
+    tamanho: float = 9,
+    cor: str = CINZA_ESCURO,
+    italico: bool = False,
+):
+    paragrafo = doc.add_paragraph()
+    paragrafo.paragraph_format.space_after = Pt(3)
+    executar = paragrafo.add_run(texto)
+    executar.font.name = FONTE
+    executar.font.size = Pt(tamanho)
+    executar.font.italic = italico
+    executar.font.color.rgb = _rgb(cor)
+    return paragrafo
 
 
 def _larguras(tabela, larguras_cm: list[float]) -> None:
@@ -399,6 +417,63 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
 
     _secao(doc, "07", "Brincadeira & atividade para casa", "Extensões do tema para além da aula principal.", ROXO)
     _caixa_brincadeira(doc, plano)
+
+    _secao(doc, "08", "Avaliação", "Rubrica formativa com indicadores por faixa etária.", AZUL)
+    _paragrafo_texto(doc, plano.avaliacao.introducao, 9, CINZA_TEXTO, italico=True)
+    _tabela_dados(
+        doc,
+        ["Critério observado", "Pré I", "Pré II"],
+        [
+            [indicador.criterio, indicador.pre_1, indicador.pre_2]
+            for indicador in plano.avaliacao.indicadores
+        ],
+        [4.6, 6.3, LARGURA_UTIL - 10.9],
+        AZUL,
+    )
+
+    _secao(
+        doc,
+        "09",
+        "Adaptações e acessibilidade",
+        "Sugestões para atender diferentes necessidades.",
+        ROXO,
+    )
+    tabela = _nova_tabela(doc, 1, 1, [LARGURA_UTIL])
+    _sem_bordas(tabela)
+    celula = tabela.rows[0].cells[0]
+    _sombra_celula(celula, CINZA_CLARO)
+    _margens_celula(celula, topo=120, baixo=120, esquerda=160, direita=160)
+    for indice, item in enumerate(plano.adaptacoes):
+        paragrafo = celula.paragraphs[0] if indice == 0 else celula.add_paragraph()
+        paragrafo.paragraph_format.space_after = Pt(3)
+        executar = paragrafo.add_run(f"• {item}")
+        executar.font.name = FONTE
+        executar.font.size = Pt(9)
+        executar.font.color.rgb = _rgb(CINZA_ESCURO)
+    doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
+    _secao(
+        doc,
+        "10",
+        "Observações do(a) professor(a)",
+        "Espaço para registrar reflexões após a aula.",
+        VERDE,
+    )
+    tabela = _nova_tabela(doc, 1, 1, [LARGURA_UTIL])
+    _sem_bordas(tabela)
+    celula = tabela.rows[0].cells[0]
+    _sombra_celula(celula, "FFFDF5")
+    _margens_celula(celula, topo=140, baixo=140, esquerda=160, direita=160)
+    if plano.observacoes_professor:
+        _texto_celula(celula, plano.observacoes_professor, tamanho=9)
+    else:
+        for linha in range(5):
+            paragrafo = celula.paragraphs[0] if linha == 0 else celula.add_paragraph()
+            paragrafo.paragraph_format.space_after = Pt(8)
+            executar = paragrafo.add_run("_" * 92)
+            executar.font.name = FONTE
+            executar.font.size = Pt(9)
+            executar.font.color.rgb = _rgb(CINZA_LINHA)
 
     paragrafo = doc.add_paragraph()
     paragrafo.paragraph_format.space_before = Pt(14)

@@ -10,7 +10,7 @@ from app.render_pptx import render_caderno
 
 def _pacote_resolvido():
     base = BaseBNCC()
-    permitidos = {habilidade.codigo for habilidade in base.buscar(uso_escolar="Pré II")}
+    permitidos = {habilidade.codigo for habilidade in base.buscar(grupo="EI03")}
     return resolver_pacote(pacote_exemplo(), base, permitidos)
 
 
@@ -42,8 +42,11 @@ def test_render_plano_docx(tmp_path):
         "Recursos e materiais",
         "Desenvolvimento da aula",
         "Brincadeira & atividade para casa",
+        "Avaliação",
+        "Adaptações e acessibilidade",
+        "Observações do(a) professor(a)",
         "EI03EF01",
-        "Meu Nome, Minha Identidade",
+        "Expressar ideias",
     ]:
         assert termo in texto
 
@@ -58,7 +61,7 @@ def test_render_caderno_pptx(tmp_path):
     assert caminho.stat().st_size > 10_000
 
     apresentacao = Presentation(caminho)
-    assert len(apresentacao.slides) == 6
+    assert len(apresentacao.slides) == 7
     assert round(apresentacao.slide_width / 360000, 1) == 21.0
     assert round(apresentacao.slide_height / 360000, 1) == 29.7
 
@@ -75,3 +78,5 @@ def test_render_caderno_pptx(tmp_path):
     assert "Este é o meu nome!" in textos[1]
     assert "🍍" in textos[3] and "ABACAXI" in textos[3]
     assert "O caminho até a escola" in textos[5]
+    assert "Nota para o professor" in textos[6]
+    assert "EI03EO01" in textos[6] or "EI03EO04" in textos[6]

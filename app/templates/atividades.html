@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block titulo %}Atividades • {{ caderno.capa.titulo }}{% endblock %}
+
+{% block conteudo %}
+<section class="hero compacto">
+  <p class="olho">Plano validado • atividades geradas</p>
+  <h1>{{ caderno.capa.titulo }}</h1>
+  <p class="sub">{{ caderno.capa.subtitulo }}</p>
+  <p class="meta">
+    Código âncora: <strong>{{ caderno.capa.codigo_ancora }}</strong> •
+    {{ caderno.capa.etapa }} • {{ caderno.capa.faixa_etaria }} •
+    {{ caderno.atividades|length }} atividades
+  </p>
+</section>
+
+<div class="acoes">
+  <form method="post" action="/baixar-atividades">
+    <textarea name="caderno_json" hidden>{{ caderno_json }}</textarea>
+    <button type="submit" class="botao">Baixar atividades (.pptx)</button>
+  </form>
+  <a href="/" class="link">Novo plano</a>
+</div>
+
+<div class="aviso-leve">
+  O slide final do PPT traz a nota de cobertura do plano. O professor pode
+  remover esse slide antes de imprimir.
+</div>
+
+<section class="cartao">
+  <h2>Atividades</h2>
+  <ol class="atividades">
+    {% for atividade in caderno.atividades %}
+    <li>
+      <div class="atividade-topo">
+        <strong>{{ atividade.numero }}. {{ atividade.titulo }}</strong>
+        <span class="chip">{{ atividade.codigo_bncc }}</span>
+      </div>
+      <p>{{ atividade.enunciado }}</p>
+      <p class="meta">
+        <strong>Tipo:</strong> {{ atividade.tipo }} •
+        <strong>Objetivo:</strong> {{ atividade.objetivo_relacionado }}
+      </p>
+      <p class="meta">BNCC: {{ atividade.descricao_bncc }}</p>
+      <span class="tipo">{{ atividade.campo_experiencia }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<section class="cartao" style="margin-top:20px;">
+  <h2>Nota de cobertura do plano</h2>
+
+  {% if caderno.nota_cobertura.codigos_nao_trabalhados %}
+  <h3>Habilidades do plano não trabalhadas nas atividades</h3>
+  <ul class="codigos">
+    {% for item in caderno.nota_cobertura.codigos_nao_trabalhados %}
+    <li><strong>{{ item.codigo }}</strong> — {{ item.descricao }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if caderno.nota_cobertura.objetivos_nao_trabalhados %}
+  <h3>Objetivos não contemplados</h3>
+  <ul class="codigos">
+    {% for objetivo in caderno.nota_cobertura.objetivos_nao_trabalhados %}
+    <li>{{ objetivo }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if caderno.nota_cobertura.sugestoes_extras %}
+  <h3>Sugestões extras (o que ficou a mais)</h3>
+  <ul class="codigos">
+    {% for sugestao in caderno.nota_cobertura.sugestoes_extras %}
+    <li>{{ sugestao }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if not caderno.nota_cobertura.codigos_nao_trabalhados
+        and not caderno.nota_cobertura.objetivos_nao_trabalhados
+        and not caderno.nota_cobertura.sugestoes_extras %}
+  <p class="vazio">Todas as habilidades e objetivos do plano foram trabalhados nas atividades.</p>
+  {% endif %}
+</section>
+{% endblock %}

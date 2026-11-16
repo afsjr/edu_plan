@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block titulo %}Gerar plano e caderno • Plano de Aula BNCC{% endblock %}
+{% block titulo %}Gerar plano a partir do código BNCC{% endblock %}
 
 {% block conteudo %}
 <section class="hero">
   <p class="olho">Ferramenta interna</p>
-  <h1>Plano de aula e caderno de atividades em minutos</h1>
+  <h1>Plano de aula a partir do código da BNCC</h1>
   <p class="sub">
-    Escolha a turma e o tema. O sistema busca as habilidades na BNCC,
-    monta o plano e o caderno no formato da instituição.
+    O professor escolhe a turma e o código âncora. O sistema seleciona mais 6
+    códigos da base, monta o plano e só libera as atividades depois da validação.
   </p>
 </section>
 
@@ -18,84 +18,62 @@
 <div class="grade duas">
   <section class="cartao">
     <div class="cartao-topo">
-      <h2>Gerar material</h2>
+      <h2>Novo plano</h2>
       <span class="selo">{{ provedor }}</span>
     </div>
 
-    <form method="post" action="/gerar" class="formulario">
+    <form method="post" action="/gerar-plano" class="formulario">
       <label>
         Turma
         <select name="uso" required>
           {% for uso in usos %}
-          <option value="{{ uso }}" {% if uso == 'Pré II' %}selected{% endif %}>{{ uso }}</option>
+          <option value="{{ uso }}" {% if uso == uso_padrao %}selected{% endif %}>{{ uso }}</option>
           {% endfor %}
         </select>
       </label>
 
       <label>
-        Tema da aula
-        <input type="text" name="tema" value="{{ tema_padrao }}" maxlength="120" required>
+        Código BNCC (âncora)
+        <select name="codigo" required>
+          <option value="">Selecione um código da base</option>
+          {% for habilidade in codigos %}
+          <option value="{{ habilidade.codigo }}" {% if habilidade.codigo == codigo_padrao %}selected{% endif %}>
+            {{ habilidade.codigo }} — {{ habilidade.sigla_campo }} — {{ habilidade.objetivo[:95] }}
+          </option>
+          {% endfor %}
+        </select>
       </label>
 
       <label>
         Observações para a geração <span class="opcional">(opcional)</span>
         <textarea name="observacoes" rows="3" maxlength="500"
-          placeholder="Ex.: turma agitada, usar materiais simples, evitar colagem..."></textarea>
+          placeholder="Ex.: turma agitada, usar materiais simples, evitar colagem...">{{ observacoes_padrao }}</textarea>
       </label>
 
-      <button type="submit" class="botao">Gerar plano + caderno</button>
+      <button type="submit" class="botao">Gerar plano</button>
     </form>
 
     <p class="nota">
-      {% if modo_demo %}
-      No modo demonstração, o download vem em um <strong>ZIP</strong> com o plano
-      <strong>.docx</strong> e o caderno <strong>.pptx</strong>. O histórico fica
-      desativado.
-      {% else %}
-      O resultado sai em <strong>.docx</strong> e <strong>.pptx</strong> editáveis.
-      O PDF fica para uma etapa futura.
-      {% endif %}
+      Códigos e descrições vêm exclusivamente de <strong>data/bncc</strong>.
+      Se o código não existir na base, o sistema informa.
     </p>
   </section>
 
   <aside class="cartao">
     <h2>Como funciona</h2>
     <ol class="passos">
-      <li>O sistema consulta a base da BNCC de Educação Infantil.</li>
-      <li>A IA escolhe apenas códigos que existem na base.</li>
-      <li>A descrição oficial é inserida pelo sistema, não pela IA.</li>
-      <li>O plano e o caderno são montados no formato da instituição.</li>
+      <li>O professor escolhe a turma e o código âncora.</li>
+      <li>O sistema busca 6 códigos relacionados na base: mesmo campo primeiro.</li>
+      <li>O plano é gerado com 7 códigos, 4 campos e 10 seções.</li>
+      <li>O professor baixa o <strong>.docx</strong> e valida o plano.</li>
+      <li>Só depois da validação as 5 atividades são geradas.</li>
+      <li>O <strong>.pptx</strong> termina com a nota de cobertura do plano.</li>
     </ol>
 
     <div class="aviso-leve">
-      Nesta versão de teste, a base cobre os <strong>93 objetivos</strong> de
-      Educação Infantil. Fundamental I entra depois.
+      Nesta versão, a base cobre os <strong>93 objetivos</strong> de Educação
+      Infantil. O foco do teste é Pré I e Pré II.
     </div>
   </aside>
 </div>
-
-{% if not modo_demo %}
-<section class="secao">
-  <div class="secao-topo">
-    <h2>Últimas gerações</h2>
-    <a href="/historico" class="link">ver histórico</a>
-  </div>
-
-  {% if recentes %}
-  <div class="lista">
-    {% for geracao in recentes %}
-    <a class="item" href="/resultado/{{ geracao.id }}">
-      <div>
-        <strong>{{ geracao.tema }}</strong>
-        <span>{{ geracao.uso_escolar }} • {{ geracao.provedor }}</span>
-      </div>
-      <span class="data">{{ geracao.criado_em[:16].replace('T', ' ') }}</span>
-    </a>
-    {% endfor %}
-  </div>
-  {% else %}
-  <p class="vazio">Nenhuma geração ainda. Preencha o formulário acima.</p>
-  {% endif %}
-</section>
-{% endif %}
 {% endblock %}

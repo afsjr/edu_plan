@@ -2,6 +2,7 @@
 {% block titulo %}Atividades • {{ caderno.capa.titulo }}{% endblock %}
 
 {% block conteudo %}
+{% set fundamental = caderno.capa.codigo_ancora[:2] == "EF" %}
 <section class="hero compacto">
   <p class="olho">Plano validado • atividades geradas</p>
   <h1>{{ caderno.capa.titulo }}</h1>
@@ -22,7 +23,7 @@
     <textarea name="plano_json" hidden>{{ plano_json }}</textarea>
     <button type="submit" class="botao secundario">Gerar outras atividades</button>
   </form>
-  <a href="/" class="link">Novo plano</a>
+  <a href="{{ '/fund1' if fundamental else '/' }}" class="link">Novo plano</a>
 </div>
 
 <div class="aviso-leve">

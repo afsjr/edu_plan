@@ -1,11 +1,13 @@
 # Plano de Aula BNCC — MVP interno
 
 Ferramenta interna para gerar um **plano de aula** e um **caderno de atividades**
-a partir de um **código da BNCC**, com foco em Educação Infantil (Pré I e Pré II).
+a partir de um **código da BNCC**. O fluxo de geração cobre **Educação
+Infantil** (Pré I e Pré II) e **Ensino Fundamental I** (1º ao 5º ano).
 
 O professor escolhe a turma e o código âncora. O sistema busca mais 6 códigos
 na base, monta o plano, o professor valida e só então as atividades são geradas.
-Tudo sai em `.docx` e `.pptx` editáveis.
+Tudo sai em `.docx` e `.pptx` editáveis, com o design system dos modelos da
+instituição (fontes abertas Poppins/Inter).
 
 ## Regra principal
 
@@ -36,20 +38,25 @@ source .venv/bin/activate
 pip install -r requirements-dev.txt
 
 python3 scripts/validar_bncc.py
+python3 scripts/validar_bncc_ef.py
 python3 -m uvicorn app.main:app --reload
 ```
 
-Abra `http://127.0.0.1:8000`, escolha a turma e o código.
+Abra `http://127.0.0.1:8000`, escolha a turma e o código. O Fundamental I fica
+em `http://127.0.0.1:8000/fund1`; a consulta da base, em `/bncc-ef`.
 
 ## IA
 
-Sem `LLM_API_KEY`, a aplicação usa o **mock estrutural** (sem custo). Para o
-material real:
+O material real usa **OpenAI `gpt-4o`** no plano e no verificador. O mock existe
+apenas para testes (`LLM_PROVIDER=mock`) ou demonstração explícita; se o
+provedor estiver configurado sem chave, a aplicação **falha com mensagem
+clara**, em vez de cair silenciosamente no mock.
 
 ```env
 LLM_PROVIDER=openai-compativel
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL=gpt-4o
+VERIFIER_MODEL=gpt-4o
 LLM_API_KEY=...
 ```
 
@@ -97,7 +104,8 @@ renderizadores e o fluxo HTTP completo.
 data/bncc/       bncc_ei.csv, mapeamento_escolar.csv, README.md
 data/icons/      icones.csv, README.md
 scripts/         extrair_bncc_ei.py, validar_bncc.py
-prompts/         system_plano.md, system_atividades.md, schemas
+prompts/         system_plano.md, system_plano_ef.md
+                 system_atividades.md, system_atividades_ef.md, schemas
 app/             bncc.py, contract.py, llm.py, pipeline.py
                  render_docx.py, render_pptx.py, main.py
 app/templates/   páginas HTML
@@ -113,14 +121,33 @@ storage/         histórico local do CLI (não versionar)
 
 ## Limitações atuais
 
-- Só Educação Infantil (93 códigos). Fundamental I não entrou.
+- O Fund. I já gera em modo mock e tem prompts dedicados, mas ainda não foi
+  comparado com modelos reais nem com referências visuais da escola.
+- A estrutura do Fund. I é uma adaptação provisória da estrutura de EI:
+  4 componentes, 1 bloco de objetivos e avaliação Inicial/Esperado.
 - O fluxo por código é uma decisão de produto; os modelos do cliente são por tema.
 - O provedor OpenAI ainda não foi exercitado neste ambiente.
 - O mock é estrutural: não mede qualidade pedagógica.
 - Sem PDF, login, pagamento ou multiusuário.
 - Os 8 tipos de atividade são templates genéricos; alguns temas vão precisar de ajuste.
+- As fontes abertas Poppins/Inter precisam estar instaladas para o DOCX/PPTX
+  abrir com a fidelidade esperada.
 - A imagem em runtime é 1 por atividade; é ilustrativa, não usada para contar/escrever.
 - A biblioteca estática de PNG/SVG ainda não foi criada.
+
+## Qualidade do material
+
+O comando abaixo valida um pacote real e, opcionalmente, compara a estrutura
+com o modelo da instituição:
+
+```bash
+python3 scripts/validar_pacote.py storage/geracoes/<id> --comparar
+```
+
+A amostra real de EI (`EI03EF01`, `gpt-4o`) passou em **24/24 verificações** e
+ficou com **95,8% de correspondência estrutural**; a de Fund. I (`EF01LP01`)
+passou em **24/24** e ficou em **95,2%** (referência ajustada: 1 bloco de
+objetivos). O verificador semântico terminou sem avisos nas duas.
 
 ## Documentação
 

@@ -18,22 +18,25 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 from app.contract import ObjetivosAno, PlanoAula
+from app.design import CORES, FONTE_TEXTO, FONTE_TITULO, TIPOGRAFIA
 
-# Paleta do modelo
-VERDE = "4CAF73"
-LARANJA = "F2683C"
-AZUL = "2D9CDB"
-ROXO = "9B6DD6"
-ROSA = "F45B9C"
-AMARELO = "FDC22D"
-AZUL_ESCURO = "1B6CA8"
-CINZA_CLARO = "F4F5F8"
-CINZA_TEXTO = "6E6E80"
-CINZA_ESCURO = "2E2E3A"
-CINZA_LINHA = "C9C9D2"
-BRANCO = "FFFFFF"
+# Paleta e tipografia dos modelos da instituição
+VERDE = CORES["verde"]
+LARANJA = CORES["laranja"]
+AZUL = CORES["azul"]
+ROXO = CORES["roxo"]
+ROSA = CORES["rosa"]
+AMARELO = CORES["amarelo"]
+AZUL_ESCURO = CORES["azul_escuro"]
+CINZA_CLARO = CORES["cinza_claro"]
+CINZA_TEXTO = CORES["cinza_texto"]
+CINZA_ESCURO = CORES["cinza_escuro"]
+CINZA_LINHA = CORES["cinza_linha"]
+BRANCO = CORES["branco"]
 
-FONTE = "Arial"
+FONTE = FONTE_TEXTO
+TAMANHO_CORPO = TIPOGRAFIA["docx"]["corpo_pt"]
+TAMANHO_ROTULO = TIPOGRAFIA["docx"]["rotulo_pt"]
 CORES_MOMENTOS = [ROSA, LARANJA, AMARELO, VERDE, ROXO, AZUL, VERDE, LARANJA]
 
 SIGLAS_CAMPOS = {
@@ -42,6 +45,14 @@ SIGLAS_CAMPOS = {
     "Traços, sons, cores e formas": "TS",
     "Escuta, fala, pensamento e imaginação": "EF",
     "Espaços, tempos, quantidades, relações e transformações": "ET",
+    "Língua Portuguesa": "LP",
+    "Arte": "AR",
+    "Educação Física": "EF",
+    "Ensino Religioso": "ER",
+    "Matemática": "MA",
+    "Ciências": "CI",
+    "Geografia": "GE",
+    "História": "HI",
 }
 
 LARGURA_UTIL = 17.2  # cm, com margens de 1,9 cm em A4 (21 cm)
@@ -49,6 +60,48 @@ LARGURA_UTIL = 17.2  # cm, com margens de 1,9 cm em A4 (21 cm)
 
 def _rgb(hexadecimal: str) -> RGBColor:
     return RGBColor.from_string(hexadecimal)
+
+
+def _destacar_paragrafo(
+    paragrafo,
+    fundo: str | None = None,
+    borda: str | None = None,
+    tamanho_borda: int = 24,
+) -> None:
+    p_pr = paragrafo._p.get_or_add_pPr()
+    if borda:
+        bordas = OxmlElement("w:pBdr")
+        esquerda = OxmlElement("w:left")
+        esquerda.set(qn("w:val"), "single")
+        esquerda.set(qn("w:sz"), str(tamanho_borda))
+        esquerda.set(qn("w:space"), "8")
+        esquerda.set(qn("w:color"), borda)
+        bordas.append(esquerda)
+        p_pr.append(bordas)
+    if fundo:
+        sombra = OxmlElement("w:shd")
+        sombra.set(qn("w:val"), "clear")
+        sombra.set(qn("w:color"), "auto")
+        sombra.set(qn("w:fill"), fundo)
+        p_pr.append(sombra)
+
+
+def _run_paragrafo(
+    paragrafo,
+    texto: str,
+    tamanho: float = TAMANHO_CORPO,
+    cor: str = CINZA_ESCURO,
+    negrito: bool = False,
+    fonte: str = FONTE,
+    italico: bool = False,
+):
+    executar = paragrafo.add_run(texto)
+    executar.font.name = fonte
+    executar.font.size = Pt(tamanho)
+    executar.font.bold = negrito
+    executar.font.italic = italico
+    executar.font.color.rgb = _rgb(cor)
+    return executar
 
 
 def _sombra_celula(celula, cor: str) -> None:
@@ -157,33 +210,36 @@ def _nova_tabela(doc, linhas: int, colunas: int, larguras_cm: list[float]):
 
 
 def _secao(doc, numero: str, titulo: str, subtitulo: str, cor: str = AZUL) -> None:
-    tabela = _nova_tabela(doc, 1, 2, [1.35, LARGURA_UTIL - 1.35])
-    _sem_bordas(tabela)
-
-    esquerda, direita = tabela.rows[0].cells
-    _sombra_celula(esquerda, cor)
-    _margens_celula(esquerda, topo=90, baixo=90)
-    _texto_celula(esquerda, numero, tamanho=17, negrito=True, cor=BRANCO, alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
-
-    _sombra_celula(direita, CINZA_CLARO)
-    _margens_celula(direita, topo=90, baixo=90)
-    paragrafo = direita.paragraphs[0]
-    paragrafo.paragraph_format.space_after = Pt(0)
-    executar = paragrafo.add_run(titulo)
-    executar.font.name = FONTE
-    executar.font.size = Pt(13)
-    executar.font.bold = True
-    executar.font.color.rgb = _rgb(AZUL_ESCURO)
+    paragrafo = doc.add_paragraph()
+    paragrafo.paragraph_format.space_before = Pt(10)
+    paragrafo.paragraph_format.space_after = Pt(1)
+    _destacar_paragrafo(paragrafo, fundo=CINZA_CLARO, borda=cor, tamanho_borda=24)
+    _run_paragrafo(
+        paragrafo,
+        f"{numero}  ",
+        tamanho=TIPOGRAFIA["docx"]["secao_numero_pt"],
+        cor=cor,
+        negrito=True,
+        fonte=FONTE_TITULO,
+    )
+    _run_paragrafo(
+        paragrafo,
+        titulo,
+        tamanho=TIPOGRAFIA["docx"]["secao_titulo_pt"],
+        cor=AZUL_ESCURO,
+        negrito=True,
+        fonte=FONTE_TITULO,
+    )
 
     if subtitulo:
-        paragrafo_sub = direita.add_paragraph()
-        paragrafo_sub.paragraph_format.space_after = Pt(0)
-        executar_sub = paragrafo_sub.add_run(subtitulo)
-        executar_sub.font.name = FONTE
-        executar_sub.font.size = Pt(8.5)
-        executar_sub.font.color.rgb = _rgb(CINZA_TEXTO)
-
-    doc.add_paragraph().paragraph_format.space_after = Pt(0)
+        paragrafo_sub = doc.add_paragraph()
+        paragrafo_sub.paragraph_format.space_after = Pt(6)
+        _run_paragrafo(
+            paragrafo_sub,
+            subtitulo,
+            tamanho=TAMANHO_CORPO,
+            cor=CINZA_TEXTO,
+        )
 
 
 def _cabecalho_tabela(tabela, titulos: list[str], cor: str) -> None:
@@ -211,11 +267,12 @@ def _tabela_dados(doc, titulos: list[str], linhas: list[list[str]], larguras_cm:
 
 def _tabela_identificacao(doc, plano: PlanoAula) -> None:
     identificacao = plano.identificacao
+    fundamental = identificacao.codigo_ancora.upper().startswith("EF")
     pares = [
         ("Tema da aula", identificacao.tema),
-        ("Turmas", " e ".join(identificacao.turmas)),
+        ("Ano" if fundamental else "Turmas", " e ".join(identificacao.turmas)),
         ("Tempo estimado", identificacao.tempo_estimado),
-        ("Área integradora", identificacao.area_integradora),
+        ("Componente" if fundamental else "Área integradora", identificacao.area_integradora),
         ("Data", "____ / ____ / ________"),
         ("Professor(a)", "__________________________________________"),
     ]
@@ -259,13 +316,11 @@ def _bloco_objetivos(doc, objetivos: ObjetivosAno, cor: str) -> None:
 
 
 def _caixa_dica(doc, dica: str) -> None:
-    tabela = _nova_tabela(doc, 1, 1, [LARGURA_UTIL])
-    _sem_bordas(tabela)
-    celula = tabela.rows[0].cells[0]
-    _sombra_celula(celula, "FFF8E0")
-    _margens_celula(celula, topo=110, baixo=110, esquerda=160, direita=160)
-    _texto_celula(celula, f"Dica: {dica}", tamanho=9, cor=LARANJA)
-    doc.add_paragraph().paragraph_format.space_after = Pt(0)
+    paragrafo = doc.add_paragraph()
+    paragrafo.paragraph_format.space_before = Pt(4)
+    paragrafo.paragraph_format.space_after = Pt(6)
+    _destacar_paragrafo(paragrafo, fundo="FFF8E0", borda=LARANJA, tamanho_borda=18)
+    _run_paragrafo(paragrafo, f"Dica: {dica}", tamanho=TAMANHO_CORPO, cor=LARANJA)
 
 
 def _caixa_brincadeira(doc, plano: PlanoAula) -> None:
@@ -298,46 +353,66 @@ def _caixa_brincadeira(doc, plano: PlanoAula) -> None:
         executar_org.font.color.rgb = _rgb(CINZA_TEXTO)
 
 
+def _etapa(plano: PlanoAula) -> str:
+    return "Educação Infantil" if plano.identificacao.codigo_ancora.upper().startswith("EI") else "Ensino Fundamental I"
+
+
 def _capa(doc, plano: PlanoAula) -> None:
-    faixa = _nova_tabela(doc, 1, 1, [LARGURA_UTIL])
-    _sem_bordas(faixa)
-    celula = faixa.rows[0].cells[0]
-    _sombra_celula(celula, AZUL)
-    _margens_celula(celula, topo=40, baixo=40)
-    _texto_celula(celula, "PLANO DE AULA", tamanho=10, negrito=True, cor=BRANCO, alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
+    faixa = doc.add_paragraph()
+    faixa.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    faixa.paragraph_format.space_after = Pt(8)
+    _destacar_paragrafo(faixa, fundo=AZUL)
+    _run_paragrafo(
+        faixa,
+        "PLANO DE AULA",
+        tamanho=10,
+        cor=BRANCO,
+        negrito=True,
+        fonte=FONTE_TITULO,
+    )
 
     doc.add_paragraph()
 
     paragrafo = doc.add_paragraph()
     paragrafo.paragraph_format.space_after = Pt(2)
-    executar = paragrafo.add_run("Educação Infantil")
-    executar.font.name = FONTE
-    executar.font.size = Pt(11)
+    executar = paragrafo.add_run(_etapa(plano))
+    executar.font.name = FONTE_TITULO
+    executar.font.size = Pt(12)
     executar.font.bold = True
     executar.font.color.rgb = _rgb(LARANJA)
 
     paragrafo = doc.add_paragraph()
-    paragrafo.paragraph_format.space_after = Pt(6)
+    paragrafo.paragraph_format.space_after = Pt(3)
     executar = paragrafo.add_run(plano.titulo)
-    executar.font.name = FONTE
-    executar.font.size = Pt(26)
+    executar.font.name = FONTE_TITULO
+    executar.font.size = Pt(TIPOGRAFIA["docx"]["capa_titulo_pt"])
     executar.font.bold = True
     executar.font.color.rgb = _rgb(AZUL_ESCURO)
 
     paragrafo = doc.add_paragraph()
     paragrafo.paragraph_format.space_after = Pt(10)
-    executar = paragrafo.add_run(plano.subtitulo)
+    executar = paragrafo.add_run(
+        " e ".join(plano.identificacao.turmas)
+        + "  •  "
+        + plano.identificacao.faixa_etaria
+    )
     executar.font.name = FONTE
     executar.font.size = Pt(12)
-    executar.font.color.rgb = _rgb(CINZA_TEXTO)
+    executar.font.bold = True
+    executar.font.color.rgb = _rgb(AZUL)
 
-    selo = _nova_tabela(doc, 1, 1, [6.2])
-    selo.alignment = WD_TABLE_ALIGNMENT.LEFT
-    _sem_bordas(selo)
-    celula_selo = selo.rows[0].cells[0]
-    _sombra_celula(celula_selo, "FFF8E0")
-    _margens_celula(celula_selo, topo=80, baixo=80)
-    _texto_celula(celula_selo, "Alinhado à BNCC 2018", tamanho=9, negrito=True, cor=LARANJA, alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
+    selo = doc.add_paragraph()
+    selo.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    selo.paragraph_format.space_after = Pt(10)
+    _destacar_paragrafo(selo, fundo="FFF8E0")
+    _run_paragrafo(
+        selo,
+        "Alinhado à BNCC 2018",
+        tamanho=9,
+        cor=LARANJA,
+        negrito=True,
+        fonte=FONTE_TITULO,
+    )
 
     doc.add_page_break()
 
@@ -359,13 +434,29 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
 
     _capa(doc, plano)
 
+    fundamental = plano.identificacao.codigo_ancora.upper().startswith("EF")
+
     _secao(doc, "01", "Identificação", "Dados gerais deste plano de aula.", AZUL)
     _tabela_identificacao(doc, plano)
 
-    _secao(doc, "02", "Campos de experiência", "Este tema articula os campos previstos pela BNCC.", LARANJA)
+    _secao(
+        doc,
+        "02",
+        "Componentes curriculares" if fundamental else "Campos de experiência",
+        (
+            "Este tema articula os componentes previstos pela BNCC."
+            if fundamental
+            else "Este tema articula os campos previstos pela BNCC."
+        ),
+        LARANJA,
+    )
     _tabela_dados(
         doc,
-        ["Sigla", "Campo de experiência", "Por que entra nesta aula"],
+        [
+            "Sigla",
+            "Componente curricular" if fundamental else "Campo de experiência",
+            "Por que entra nesta aula",
+        ],
         [
             [SIGLAS_CAMPOS.get(campo.nome, "•"), campo.nome, campo.justificativa]
             for campo in plano.campos_experiencia
@@ -381,7 +472,7 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
     _secao(doc, "04", "Habilidades da BNCC", "Habilidades mobilizadas ao longo da aula.", ROXO)
     _tabela_dados(
         doc,
-        ["Código", "Descrição", "Campo"],
+        ["Código", "Descrição", "Componente" if fundamental else "Campo"],
         [[h.codigo, h.descricao, h.campo_experiencia] for h in plano.habilidades],
         [2.5, LARGURA_UTIL - 6.4, 3.9],
         ROXO,
@@ -433,7 +524,11 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
     _paragrafo_texto(doc, plano.avaliacao.introducao, 9, CINZA_TEXTO, italico=True)
     _tabela_dados(
         doc,
-        ["Critério observado", "Pré I", "Pré II"],
+        (
+            ["Critério observado", "Inicial", "Esperado"]
+            if fundamental
+            else ["Critério observado", "Pré I", "Pré II"]
+        ),
         [
             [indicador.criterio, indicador.pre_1, indicador.pre_2]
             for indicador in plano.avaliacao.indicadores
@@ -449,18 +544,11 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
         "Sugestões para atender diferentes necessidades.",
         ROXO,
     )
-    tabela = _nova_tabela(doc, 1, 1, [LARGURA_UTIL])
-    _sem_bordas(tabela)
-    celula = tabela.rows[0].cells[0]
-    _sombra_celula(celula, CINZA_CLARO)
-    _margens_celula(celula, topo=120, baixo=120, esquerda=160, direita=160)
-    for indice, item in enumerate(plano.adaptacoes):
-        paragrafo = celula.paragraphs[0] if indice == 0 else celula.add_paragraph()
+    for item in plano.adaptacoes:
+        paragrafo = doc.add_paragraph()
         paragrafo.paragraph_format.space_after = Pt(3)
-        executar = paragrafo.add_run(f"• {item}")
-        executar.font.name = FONTE
-        executar.font.size = Pt(9)
-        executar.font.color.rgb = _rgb(CINZA_ESCURO)
+        _destacar_paragrafo(paragrafo, fundo=CINZA_CLARO)
+        _run_paragrafo(paragrafo, f"• {item}", tamanho=TAMANHO_CORPO)
     doc.add_paragraph().paragraph_format.space_after = Pt(0)
 
     _secao(
@@ -470,21 +558,16 @@ def render_plano(plano: PlanoAula, destino: Path) -> Path:
         "Espaço para registrar reflexões após a aula.",
         VERDE,
     )
-    tabela = _nova_tabela(doc, 1, 1, [LARGURA_UTIL])
-    _sem_bordas(tabela)
-    celula = tabela.rows[0].cells[0]
-    _sombra_celula(celula, "FFFDF5")
-    _margens_celula(celula, topo=140, baixo=140, esquerda=160, direita=160)
     if plano.observacoes_professor:
-        _texto_celula(celula, plano.observacoes_professor, tamanho=9)
+        paragrafo = doc.add_paragraph()
+        _destacar_paragrafo(paragrafo, fundo="FFFDF5")
+        _run_paragrafo(paragrafo, plano.observacoes_professor, tamanho=TAMANHO_CORPO)
     else:
-        for linha in range(5):
-            paragrafo = celula.paragraphs[0] if linha == 0 else celula.add_paragraph()
+        for _ in range(5):
+            paragrafo = doc.add_paragraph()
             paragrafo.paragraph_format.space_after = Pt(8)
-            executar = paragrafo.add_run("_" * 92)
-            executar.font.name = FONTE
-            executar.font.size = Pt(9)
-            executar.font.color.rgb = _rgb(CINZA_LINHA)
+            _destacar_paragrafo(paragrafo, fundo="FFFDF5")
+            _run_paragrafo(paragrafo, "_" * 92, tamanho=TAMANHO_CORPO, cor=CINZA_LINHA)
 
     paragrafo = doc.add_paragraph()
     paragrafo.paragraph_format.space_before = Pt(14)

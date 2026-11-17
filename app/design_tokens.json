@@ -1,0 +1,255 @@
+{
+  "versao": 1,
+  "fontes": {
+    "titulo": "Poppins",
+    "texto": "Inter",
+    "fallback": [
+      "Century Gothic",
+      "Aptos",
+      "Arial",
+      "sans-serif"
+    ],
+    "substitutos_abertos": {
+      "pptx": "Poppins",
+      "docx_titulo": "Poppins",
+      "docx_texto": "Inter"
+    },
+    "origem_referencia": {
+      "pptx": "Century Gothic",
+      "docx": "Aptos / Aptos Display"
+    },
+    "licenca": "SIL Open Font License 1.1",
+    "observacao": "Os arquivos gerados referenciam o nome da fonte. A máquina que abre o DOCX/PPTX precisa ter Poppins e Inter instaladas; caso contrário, o Office substitui pela fallback."
+  },
+  "cores": {
+    "azul_escuro": "1B6CA8",
+    "azul": "2D9CDB",
+    "laranja": "F2683C",
+    "rosa": "F45B9C",
+    "amarelo": "FDC22D",
+    "verde": "4CAF73",
+    "roxo": "9B6DD6",
+    "cinza_texto": "6E6E80",
+    "cinza_escuro": "3A3A4A",
+    "cinza_linha": "C9C9D2",
+    "cinza_claro": "F4F5F8",
+    "branco": "FFFFFF",
+    "creme": "FFF8E0",
+    "fundo_desenho": "FFFDF5"
+  },
+  "layout": {
+    "docx": {
+      "pagina_cm": [
+        21.0,
+        29.7
+      ],
+      "margens_cm": 1.9,
+      "largura_util_cm": 17.2,
+      "secoes": 10,
+      "tabelas_referencia": 9,
+      "paragrafos_referencia": 55
+    },
+    "pptx": {
+      "pagina_cm": [
+        21.01,
+        29.69
+      ],
+      "margem_cm": 1.8,
+      "largura_util_cm": 17.41,
+      "slides_referencia": 6,
+      "atividades": 5
+    }
+  },
+  "tipografia": {
+    "docx": {
+      "capa_titulo_pt": 28,
+      "secao_titulo_pt": 20,
+      "secao_numero_pt": 9,
+      "corpo_pt": 10,
+      "rotulo_pt": 9,
+      "nota_pt": 7.5
+    },
+    "pptx": {
+      "capa_titulo_pt": 40,
+      "capa_subtitulo_pt": 15,
+      "atividade_titulo_pt": 22,
+      "corpo_pt": 12,
+      "rodape_pt": 9
+    }
+  },
+  "componentes": {
+    "capa": "Faixa colorida, título grande, subtítulo, selo BNCC e identificação da etapa.",
+    "secao": "Número em bloco colorido + título 20 pt + subtítulo 10 pt.",
+    "tabela": "Cabeçalho colorido, linhas alternadas em cinza claro, bordas suaves.",
+    "atividade": "Cabeçalho colorido, número em círculo, selo do código BNCC, enunciado e área de resposta.",
+    "rodape": "Linha fina, nome do material, etapa e número da página.",
+    "selo": "Pílula creme com borda amarela para 'Alinhado à BNCC'."
+  },
+  "evidencias": {
+    "docx": {
+      "arquivo": "Plano de Aula - Meu nome, minha identidade.docx",
+      "pagina_cm": [
+        21.0,
+        29.7
+      ],
+      "margens_cm": 1.9,
+      "paragrafos": 55,
+      "tabelas": 9,
+      "fontes": {},
+      "tamanhos_pt": {
+        "10.0": 12,
+        "9.0": 10,
+        "20.0": 10,
+        "13.0": 7,
+        "28.0": 7,
+        "12.0": 1,
+        "9.5": 1
+      },
+      "cores_texto": {
+        "1B6CA8": 48,
+        "FFFFFF": 46,
+        "6E6E80": 34,
+        "F2683C": 14,
+        "4CAF73": 12,
+        "2E74B5": 4,
+        "2D9CDB": 3,
+        "9B6DD6": 3,
+        "FDC22D": 2,
+        "F45B9C": 2,
+        "1F4D78": 2,
+        "1F1F1F": 1,
+        "0563C1": 1
+      },
+      "preenchimentos": {
+        "F4F5F8": 16,
+        "FFFFFF": 9,
+        "F45B9C": 7,
+        "2D9CDB": 5,
+        "1B6CA8": 5,
+        "4CAF73": 5,
+        "F2683C": 5,
+        "9B6DD6": 2,
+        "FDC22D": 2,
+        "FFF8E0": 1
+      },
+      "fontes_tema": [
+        [
+          "majorFont",
+          "Aptos Display"
+        ],
+        [
+          "minorFont",
+          "Aptos"
+        ]
+      ],
+      "midia": 0
+    },
+    "pptx": {
+      "arquivo": "Atividades A4 ppt - Meu nome, minha identidade.pptx",
+      "slides": 6,
+      "pagina_cm": [
+        21.01,
+        29.69
+      ],
+      "fontes": {
+        "Century Gothic": 55,
+        "Arial": 26
+      },
+      "tamanhos_pt": {
+        "12.0": 15,
+        "15.0": 11,
+        "9.0": 11,
+        "20.0": 10,
+        "13.0": 5,
+        "36.0": 5,
+        "22.0": 5,
+        "10.0": 5,
+        "14.0": 4,
+        "54.0": 4,
+        "18.0": 3,
+        "40.0": 2,
+        "11.0": 1
+      },
+      "cores_srgb": {
+        "FFFFFF": 34,
+        "F2683C": 30,
+        "FDC22D": 25,
+        "2D9CDB": 23,
+        "4CAF73": 17,
+        "F45B9C": 15,
+        "FFF7E8": 14,
+        "9B6DD6": 14,
+        "3A3A4A": 14,
+        "1B6CA8": 13,
+        "6E6E80": 13,
+        "C9CEE0": 9,
+        "B8BCCF": 6,
+        "888888": 5,
+        "C5C9D9": 4
+      },
+      "slides_detalhe": [
+        {
+          "numero": 1,
+          "shapes": 17,
+          "textos": [
+            "Caderno de Atividades",
+            "Meu Nome, / Minha Identidade",
+            "Educação Infantil  •  Alinhado à BNCC",
+            "Pré I  e  Pré II   •   4 a 5 anos"
+          ]
+        },
+        {
+          "numero": 2,
+          "shapes": 48,
+          "textos": [
+            "1",
+            "Este é o meu nome!",
+            "Cubra as letrinhas pontilhadas e escreva o seu nome.",
+            "EI03EF01"
+          ]
+        },
+        {
+          "numero": 3,
+          "shapes": 33,
+          "textos": [
+            "2",
+            "Este sou eu!",
+            "Desenhe o seu rostinho no espelho e pinte do seu jeito.",
+            "EI03EO02"
+          ]
+        },
+        {
+          "numero": 4,
+          "shapes": 47,
+          "textos": [
+            "3",
+            "A letrinha do meu nome",
+            "Ligue cada desenho à letra com que o nome começa.",
+            "EI03EF09"
+          ]
+        },
+        {
+          "numero": 5,
+          "shapes": 36,
+          "textos": [
+            "4",
+            "A turma colorida",
+            "Pinte cada espaço seguindo a cor de cada número.",
+            "EI03TS02"
+          ]
+        },
+        {
+          "numero": 6,
+          "shapes": 21,
+          "textos": [
+            "5",
+            "O caminho até a escola",
+            "Ajude a criança a chegar na escola seguindo o caminho.",
+            "EI03CG05"
+          ]
+        }
+      ],
+      "midia": 17
+    }
+  }
+}

@@ -2,6 +2,7 @@
 {% block titulo %}{{ plano.titulo }} • Plano de Aula{% endblock %}
 
 {% block conteudo %}
+{% set fundamental = plano.identificacao.codigo_ancora[:2] == "EF" %}
 <section class="hero compacto">
   <p class="olho">Plano gerado • aguardando validação</p>
   <h1>{{ plano.titulo }}</h1>
@@ -23,7 +24,7 @@
     <textarea name="plano_json" hidden>{{ plano_json }}</textarea>
     <button type="submit" class="botao">Validar plano e gerar atividades</button>
   </form>
-  <a href="/" class="link">Novo plano</a>
+  <a href="{{ '/fund1' if fundamental else '/' }}" class="link">Novo plano</a>
 </div>
 
 <div class="aviso-leve">
@@ -33,9 +34,9 @@
 
 <div class="grade duas">
   <section class="cartao">
-    <h2>Campos de experiência</h2>
+    <h2>{{ "Componentes curriculares" if fundamental else "Campos de experiência" }}</h2>
     <table class="tabela">
-      <thead><tr><th></th><th>Campo</th><th>Por que entra</th></tr></thead>
+      <thead><tr><th></th><th>{{ "Componente" if fundamental else "Campo" }}</th><th>Por que entra</th></tr></thead>
       <tbody>
         {% for campo in plano.campos_experiencia %}
         <tr><td>{{ campo.icone }}</td><td><strong>{{ campo.nome }}</strong></td><td>{{ campo.justificativa }}</td></tr>
@@ -53,7 +54,7 @@
 
     <h2 style="margin-top:24px;">Habilidades da BNCC</h2>
     <table class="tabela">
-      <thead><tr><th>Código</th><th>Descrição oficial</th><th>Campo</th></tr></thead>
+      <thead><tr><th>Código</th><th>Descrição oficial</th><th>{{ "Componente" if fundamental else "Campo" }}</th></tr></thead>
       <tbody>
         {% for habilidade in plano.habilidades %}
         <tr>
@@ -99,7 +100,7 @@
     <h2>Avaliação</h2>
     <p class="meta">{{ plano.avaliacao.introducao }}</p>
     <table class="tabela">
-      <thead><tr><th>Critério</th><th>Pré I</th><th>Pré II</th></tr></thead>
+      <thead><tr><th>Critério</th><th>{{ "Inicial" if fundamental else "Pré I" }}</th><th>{{ "Esperado" if fundamental else "Pré II" }}</th></tr></thead>
       <tbody>
         {% for indicador in plano.avaliacao.indicadores %}
         <tr><td>{{ indicador.criterio }}</td><td>{{ indicador.pre_1 }}</td><td>{{ indicador.pre_2 }}</td></tr>

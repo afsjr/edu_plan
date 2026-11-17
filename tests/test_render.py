@@ -54,7 +54,8 @@ def test_render_plano_docx(tmp_path):
         assert proibido not in texto
     assert "Sigla" in texto
 
-    assert len(documento.tables) >= 15
+    assert len(documento.tables) >= 8
+    assert len(documento.paragraphs) >= 40
 
 
 def test_render_caderno_pptx(tmp_path):
@@ -65,7 +66,7 @@ def test_render_caderno_pptx(tmp_path):
     assert caminho.stat().st_size > 10_000
 
     apresentacao = Presentation(caminho)
-    assert len(apresentacao.slides) == 7
+    assert len(apresentacao.slides) == 6
     assert round(apresentacao.slide_width / 360000, 1) == 21.0
     assert round(apresentacao.slide_height / 360000, 1) == 29.7
 
@@ -82,8 +83,6 @@ def test_render_caderno_pptx(tmp_path):
     assert "Este é o meu nome!" in textos[1]
     assert "ABACAXI" in textos[3]
     assert "O caminho até a escola" in textos[5]
-    assert "Nota para o professor" in textos[6]
-    assert "EI03EO01" in textos[6] or "EI03EO04" in textos[6]
     for proibido in ["🎨", "✏️", "🔤", "🔢", "🧩", "🏠", "🏫", "✨", "里", "□"]:
         assert all(proibido not in texto for texto in textos)
 
@@ -109,3 +108,23 @@ def test_render_caderno_com_imagem(tmp_path):
         if shape.shape_type == MSO_SHAPE_TYPE.PICTURE
     ]
     assert fotos
+
+
+def test_render_caderno_com_nota_opcional(tmp_path):
+    pacote = _pacote_resolvido()
+    caminho = render_caderno(
+        pacote.caderno,
+        tmp_path / "caderno_nota.pptx",
+        incluir_nota=True,
+    )
+    apresentacao = Presentation(caminho)
+    assert len(apresentacao.slides) == 7
+    textos = [
+        " ".join(
+            shape.text_frame.text
+            for shape in slide.shapes
+            if shape.has_text_frame
+        )
+        for slide in apresentacao.slides
+    ]
+    assert "Nota para o professor" in textos[6]

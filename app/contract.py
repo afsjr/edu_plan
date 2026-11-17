@@ -56,6 +56,14 @@ ICONES_CAMPOS = {
     "Traços, sons, cores e formas": "🎨",
     "Escuta, fala, pensamento e imaginação": "📚",
     "Espaços, tempos, quantidades, relações e transformações": "🔢",
+    "Língua Portuguesa": "📚",
+    "Arte": "🎨",
+    "Educação Física": "🏃",
+    "Ensino Religioso": "🤝",
+    "Matemática": "🔢",
+    "Ciências": "🔬",
+    "Geografia": "🌍",
+    "História": "🏛️",
 }
 
 ICONES_SEGUROS = {registro.emoji for registro in banco().registros()} | {
@@ -518,11 +526,59 @@ def _titulo_curto(descricao: str, minimo: int = 30, maximo: int = 95) -> str:
     return escolhido
 
 
+LIMIAR_OBJETIVO = 0.40
+
+
+def _similaridade_objetivo(descricao: str, objetivo: str) -> float:
+    return difflib.SequenceMatcher(
+        None, normalizar(descricao), normalizar(objetivo)
+    ).ratio()
+
+
+def _codigos_sem_objetivo(plano: PlanoAula) -> list[str]:
+    objetivos = [item for bloco in plano.objetivos for item in bloco.itens]
+    if not objetivos:
+        return [habilidade.codigo for habilidade in plano.habilidades]
+    faltando = []
+    for habilidade in plano.habilidades:
+        melhor = max(
+            _similaridade_objetivo(habilidade.descricao, objetivo)
+            for objetivo in objetivos
+        )
+        if melhor < LIMIAR_OBJETIVO:
+            faltando.append(habilidade.codigo)
+    return faltando
+
+
+def _objetivos_deterministicos(gerado: PlanoGerado, habilidades: list) -> list[ObjetivosAno]:
+    """Substitui os objetivos pelos textos oficiais das habilidades.
+
+    Usado apenas como fallback depois de três tentativas sem cobertura. Mantém
+    os rótulos de ano do plano e distribui 4 itens em Pré I e o restante em
+    Pré II; no Fundamental I, todos ficam no único bloco.
+    """
+    textos = [_titulo_curto(habilidade.descricao, 25, 110) for habilidade in habilidades]
+    fundamental = gerado.identificacao.codigo_ancora.upper().startswith("EF")
+
+    if fundamental:
+        ano = gerado.objetivos[0].ano if gerado.objetivos else "1º ano"
+        return [ObjetivosAno(ano=ano, itens=textos)]
+
+    ano_pre_1 = gerado.objetivos[0].ano if gerado.objetivos else "Pré I"
+    ano_pre_2 = gerado.objetivos[1].ano if len(gerado.objetivos) > 1 else "Pré II"
+    return [
+        ObjetivosAno(ano=ano_pre_1, itens=textos[:4]),
+        ObjetivosAno(ano=ano_pre_2, itens=textos[4:]),
+    ]
+
+
 def resolver_plano(
     gerado: PlanoGerado,
     base: BaseBNCC,
     permitidos: set[str] | None,
     ancora: str,
+    exigir_cobertura: bool = False,
+    completar_objetivos: bool = False,
 ) -> PlanoAula:
     ancora_h = base.por_codigo(ancora)
     if ancora_h is None:
@@ -567,6 +623,21 @@ def resolver_plano(
         dica=gerado.dica,
         brincadeira_casa=gerado.brincadeira_casa,
     )
+
+    if completar_objetivos:
+        faltando = _codigos_sem_objetivo(plano)
+        if faltando:
+            objetivos = _objetivos_deterministicos(gerado, habilidades)
+            plano = plano.model_copy(update={"objetivos": objetivos})
+
+    if exigir_cobertura:
+        faltando = _codigos_sem_objetivo(plano)
+        if faltando:
+            raise ErroContrato(
+                "Os objetivos do plano não cobrem as habilidades: "
+                + ", ".join(faltando)
+                + ". Reescreva os objetivos usando o verbo oficial de cada código."
+            )
 
     avisos = validar_plano(plano)
     if avisos:
@@ -622,11 +693,16 @@ def resolver_caderno(
         sugestoes_extras=gerado.nota_cobertura.sugestoes_extras,
     )
 
+    fundamental = plano.identificacao.codigo_ancora.upper().startswith("EF")
     capa = gerado.capa.model_copy(
         update={
             "titulo": plano.titulo,
             "subtitulo": "Caderno de Atividades",
-            "etapa": "Educação Infantil",
+            "etapa": (
+                "Ensino Fundamental — Anos Iniciais"
+                if fundamental
+                else "Educação Infantil"
+            ),
             "faixa_etaria": plano.identificacao.faixa_etaria,
             "alinhamento_bncc": "Alinhado à BNCC",
             "codigo_ancora": plano.identificacao.codigo_ancora,
@@ -651,18 +727,30 @@ def resolver_pacote(
 
 def validar_plano(plano: PlanoAula) -> list[str]:
     avisos: list[str] = []
+    fundamental = plano.identificacao.codigo_ancora.upper().startswith("EF")
     if len(plano.habilidades) != 7:
         avisos.append(f"O plano tem {len(plano.habilidades)} habilidades; o modelo usa 7.")
     if len({h.campo_experiencia for h in plano.habilidades}) != 4:
-        avisos.append("O plano não cobre exatamente 4 campos de experiência.")
+        avisos.append("O plano não cobre exatamente 4 componentes/campos.")
     if len(plano.campos_experiencia) != 4:
-        avisos.append(f"O plano tem {len(plano.campos_experiencia)} campos; o modelo usa 4.")
+        avisos.append(f"O plano tem {len(plano.campos_experiencia)} componentes/campos; o modelo usa 4.")
     if not (6 <= len(plano.recursos) <= 8):
         avisos.append(f"O plano tem {len(plano.recursos)} recursos; o esperado é 6 a 8.")
     if len(plano.desenvolvimento) != 7:
         avisos.append(f"O plano tem {len(plano.desenvolvimento)} momentos; o modelo usa 7.")
-    if len(plano.objetivos) != 2:
+    if fundamental:
+        if len(plano.objetivos) != 1:
+            avisos.append("O plano do Fundamental I deve ter 1 bloco de objetivos (o ano).")
+        elif len(plano.objetivos[0].itens) != 7:
+            avisos.append(
+                f"O plano do Fundamental I deve ter 7 objetivos; tem {len(plano.objetivos[0].itens)}."
+            )
+    elif len(plano.objetivos) != 2:
         avisos.append("O plano deve separar objetivos em Pré I e Pré II.")
+    elif not (7 <= sum(len(bloco.itens) for bloco in plano.objetivos) <= 8):
+        avisos.append("O plano deve ter 7 ou 8 objetivos (um por habilidade).")
+    elif any(len(bloco.itens) not in (3, 4, 5) for bloco in plano.objetivos):
+        avisos.append("Cada bloco de objetivos deve ter de 3 a 5 itens.")
     if not plano.avaliacao.indicadores:
         avisos.append("A seção de avaliação está sem indicadores.")
     if not plano.adaptacoes:
@@ -678,6 +766,51 @@ def validar_caderno(caderno: CadernoAtividades, plano: PlanoAula) -> None:
     numeros = [atividade.numero for atividade in caderno.atividades]
     if numeros != list(range(1, len(numeros) + 1)):
         raise ErroContrato(f"Atividades fora de ordem: {numeros}")
+
+    tipos = {atividade.tipo for atividade in caderno.atividades}
+    if len(tipos) < 5:
+        raise ErroContrato(
+            "O caderno deve usar 5 tipos diferentes de atividade; "
+            f"vieram {len(tipos)}: {sorted(tipos)}."
+        )
+
+    codigos_atividades = {atividade.codigo_bncc for atividade in caderno.atividades}
+    if len(codigos_atividades) < 5:
+        raise ErroContrato(
+            "O caderno deve usar 5 códigos diferentes do plano; "
+            f"vieram {len(codigos_atividades)}: {sorted(codigos_atividades)}."
+        )
+
+    for atividade in caderno.atividades:
+        conteudo = atividade.conteudo
+        if atividade.tipo == "cobrir_palavra" and not conteudo.texto_para_cobrir:
+            raise ErroContrato(
+                f"A atividade {atividade.numero} é cobrir_palavra, mas não tem texto_para_cobrir."
+            )
+        if atividade.tipo == "ligar" and not conteudo.pares:
+            raise ErroContrato(
+                f"A atividade {atividade.numero} é ligar, mas não tem pares."
+            )
+        if atividade.tipo == "contar" and not conteudo.quantidade:
+            raise ErroContrato(
+                f"A atividade {atividade.numero} é contar, mas não tem quantidade."
+            )
+        if atividade.tipo == "colorir" and not conteudo.legenda_cores:
+            raise ErroContrato(
+                f"A atividade {atividade.numero} é colorir, mas não tem legenda_cores."
+            )
+        if atividade.tipo == "completar" and not conteudo.sequencia:
+            raise ErroContrato(
+                f"A atividade {atividade.numero} é completar, mas não tem sequencia."
+            )
+        if atividade.tipo == "desenhar" and not conteudo.frases:
+            raise ErroContrato(
+                f"A atividade {atividade.numero} é desenhar, mas não tem frases."
+            )
+        if atividade.tipo == "recortar_colar" and not conteudo.itens_recortar:
+            raise ErroContrato(
+                f"A atividade {atividade.numero} é recortar_colar, mas não tem itens_recortar."
+            )
 
     plan_codes = {habilidade.codigo for habilidade in plano.habilidades}
     atividade_codes = {atividade.codigo_bncc for atividade in caderno.atividades}

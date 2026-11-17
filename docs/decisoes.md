@@ -61,6 +61,14 @@
 | D-035 | Atividades variam (temperatura 0.8) e botão de nova versão | aceita |
 | D-036 | Verificador semântico gpt-4o-mini + regra campo → tipo | aceita |
 | D-037 | Entrega com avisos se o verificador não convergir | aceita |
+| D-038 | Base do Fund. I separada, com ciclos multi-ano | aceita |
+| D-039 | Fontes abertas Poppins/Inter e tokens em JSON | aceita |
+| D-040 | Sem login, pagamento ou multiusuário no MVP | aceita |
+| D-041 | Design system extraído por adaptador OOXML + Reversa | aceita |
+| D-042 | Sem fallback silencioso para mock; provedor real obrigatório | aceita |
+| D-043 | Atribuição determinística de código, tipo e objetivo | aceita |
+| D-044 | Nota de cobertura do PPTX é opcional (padrão desligado) | aceita |
+| D-045 | Gate de qualidade para pacote gerado | aceita |
 
 ---
 
@@ -458,3 +466,93 @@
 | 2026-11-16 | Objetivo por índice e prompt sem descrição BNCC (D-032). |
 | 2026-11-16 | Título curto, 5 imagens, variação e verificador (D-033 a D-036). |
 | 2026-11-16 | Entrega com avisos do verificador (D-037). |
+
+
+---
+
+## Fund. I, design e escopo
+
+### D-038 — Base do Fund. I separada, com ciclos multi-ano
+
+- **Contexto:** a BNCC do Fundamental I tem 574 habilidades, mas Arte (`EF15AR`)
+  e Educação Física (`EF12EF`/`EF35EF`) usam ciclos de vários anos.
+- **Decisão:** manter `bncc_ef.csv` separado de `bncc_ei.csv`, com `ano`,
+  `ciclo`, `componente` e `habilidade`. O filtro por ano usa o conjunto de anos
+  do ciclo, não igualdade do prefixo.
+- **Consequência:** dados oficiais preservados; o contrato foi adaptado para
+  EF com 4 componentes, 1 bloco de objetivos (o ano) e avaliação
+  Inicial/Esperado.
+- **Reabrir se:** a escola exigir um recorte por componente que não caiba no
+  ciclo oficial.
+
+### D-039 — Fontes abertas Poppins/Inter e tokens em JSON
+
+- **Contexto:** os modelos usam Century Gothic (PPTX) e Aptos (DOCX), fontes
+  proprietárias. O cliente pediu alternativas abertas.
+- **Decisão:** títulos em **Poppins** e texto em **Inter** (SIL OFL), com os
+  tokens em `app/design_tokens.json`.
+- **Consequência:** documentos referenciam as fontes; sem instalação, o Office
+  usa fallback. A fidelidade visual depende de instalar as duas.
+- **Reabrir se:** a escola padronizar outra fonte aberta.
+
+### D-040 — Sem login, pagamento ou multiusuário no MVP
+
+- **Contexto:** o áudio de 13:39 pede “só o motor”, sem login e sem pagamento.
+- **Decisão:** a tela é mínima, sem autenticação; os documentos são a entrega.
+- **Consequência:** menos infraestrutura e nenhum dado de aluno; não há
+  histórico por usuário.
+- **Reabrir se:** o sistema próprio exigir autenticação ou cobrança.
+
+### D-041 — Design system extraído por adaptador OOXML + Reversa
+
+- **Contexto:** o `reversa-design-system` lê CSS/temas/screenshots, não Office.
+- **Decisão:** `scripts/extrair_design_system.py` lê o OOXML, renderiza a
+  evidência e grava tokens + docs em `_reversa_sdd/design-system/`.
+- **Consequência:** tokens reproduzíveis e rastreáveis; o agente Reversa
+  documenta o que o extrator encontrou.
+- **Reabrir se:** o Reversa passar a ler Office nativamente.
+
+
+---
+
+## Qualidade e provedor real
+
+### D-042 — Sem fallback silencioso para mock
+
+- **Contexto:** o cliente reclamou de material fraco; um mock silencioso poderia
+  entregar estrutura sem qualidade real.
+- **Decisão:** `LLM_PROVIDER=mock` só roda quando pedido explicitamente. Se o
+  provedor estiver configurado sem `LLM_API_KEY`, a aplicação falha com erro
+  claro.
+- **Consequência:** nenhum material de cliente sai em mock por acidente.
+- **Reabrir se:** o modo offline voltar a ser requisito de produção.
+
+### D-043 — Atribuição determinística de código, tipo e objetivo
+
+- **Contexto:** o modelo escolhia tipos e códigos livremente e o verificador
+  reprovava várias atividades.
+- **Decisão:** `app/atividades.py` define as 5 combinações (código, tipo,
+  objetivo) a partir do verbo da habilidade oficial. O LLM escreve o texto, mas
+  não troca a combinação. O objetivo é mapeado pelo índice da habilidade.
+- **Consequência:** 5 códigos e 5 tipos diferentes, com alinhamento verificável.
+- **Reabrir se:** o modelo passar a acertar o alinhamento sem a âncora
+  determinística.
+
+### D-044 — Nota de cobertura do PPTX é opcional
+
+- **Contexto:** o modelo da instituição tem 6 slides (capa + 5 atividades); a
+  nota de cobertura criava um 7º slide.
+- **Decisão:** `render_caderno(..., incluir_nota=False)` por padrão; a nota
+  continua no HTML e pode ser incluída no PPTX sob demanda.
+- **Consequência:** o PPTX fica estruturalmente igual ao modelo.
+- **Reabrir se:** o cliente quiser a nota sempre impressa.
+
+### D-045 — Gate de qualidade para pacote gerado
+
+- **Contexto:** era preciso medir a entrega antes de mandar ao cliente.
+- **Decisão:** `scripts/validar_pacote.py` confere 7 habilidades, 4
+  componentes/campos, 7 momentos, 6–8 recursos, 4 indicadores, 4 adaptações,
+  5 atividades, 5 códigos, 5 tipos, verifier sem avisos, DOCX com 10 seções e
+  8–10 tabelas, PPTX com 6 slides e imagens.
+- **Consequência:** amostras reais de EI e Fund. I passaram em 24/24.
+- **Reabrir se:** o conjunto de critérios do cliente mudar.

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block titulo %}Consultar BNCC • Ensino Fundamental I{% endblock %}
+
+{% block conteudo %}
+<section class="hero compacto">
+  <p class="olho">Consulta rápida</p>
+  <h1>Base da BNCC — Ensino Fundamental I</h1>
+  <p class="sub">
+    {{ resumo.total }} habilidades do 1º ao 5º ano, incluindo os ciclos
+    multi-ano de Arte e Educação Física. Filtre por ano, componente ou palavra.
+  </p>
+</section>
+
+{% if erro %}
+<div class="alerta">{{ erro }}</div>
+{% endif %}
+
+<section class="cartao">
+  <form method="get" action="/bncc-ef" class="formulario horizontal">
+    <label>
+      Ano
+      <select name="ano">
+        <option value="">Todos</option>
+        {% for numero in anos %}
+        <option value="{{ numero }}" {% if ano == numero|string %}selected{% endif %}>{{ numero }}º ano</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>
+      Componente
+      <select name="componente">
+        <option value="">Todos</option>
+        {% for sigla, nome in componentes.items() %}
+        <option value="{{ sigla }}" {% if componente == sigla %}selected{% endif %}>{{ sigla }} — {{ nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="cresce">
+      Palavra-chave
+      <input type="text" name="texto" value="{{ texto }}" placeholder="Ex.: leitura, números, corpo">
+    </label>
+
+    <button type="submit" class="botao">Filtrar</button>
+  </form>
+</section>
+
+<section class="secao">
+  <div class="secao-topo">
+    <h2>{{ resultados|length }} resultado(s)</h2>
+    <a href="/bncc-ef" class="link">limpar filtros</a>
+  </div>
+
+  {% if resultados %}
+  <div class="cartao sem-espaco">
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Ano</th>
+          <th>Componente</th>
+          <th>Habilidade</th>
+          <th>Pág.</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for habilidade in resultados %}
+        <tr>
+          <td><strong>{{ habilidade.codigo }}</strong></td>
+          <td class="agora">{{ habilidade.ano }}</td>
+          <td>{{ habilidade.sigla_componente }}</td>
+          <td>{{ habilidade.habilidade }}</td>
+          <td class="agora">{{ habilidade.pagina_pdf }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhum resultado com esses filtros.</p>
+  {% endif %}
+</section>
+{% endblock %}

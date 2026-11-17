@@ -9,9 +9,11 @@
 - **Último commit antes deste handoff:** `fd378ac`
 - **Produção:** https://plano-aula-bncc.vercel.app
 - **Vercel:** projeto `plano-aula-bncc`, time `adelinos-projects`, CLI logado como `afsjr`
-- **Provedor ativo:** `openai-compativel` (`LLM_MODEL=gpt-4o`); o selo na home confirma
+- **Provedor ativo:** `openai-compativel` (`LLM_MODEL=gpt-4o`, `VERIFIER_MODEL=gpt-4o`); sem fallback silencioso para mock
 - **Imagem:** Cloudflare FLUX, 5 por pacote (uma por atividade), 512 px, base64
-- **Testes:** 43 passando
+- **Testes:** 56 passando
+- **Base Fund. I:** 574 habilidades em `data/bncc/bncc_ef.csv`, consulta `/bncc-ef`
+- **Design system:** tokens em `app/design_tokens.json` e `_reversa_sdd/design-system/`
 - **Produção validada em 2026-11-16:** 5 imagens, atividades variando, PPTX 7 slides, DOCX limpo; 2 avisos do verificador em `EI03EO07`
 
 ## O que está funcionando
@@ -24,9 +26,17 @@
 - **Loop de reparo** de até 3 tentativas; se não convergir, bloqueia.
 - **Sanitização:** ícone de campo vira sigla no DOCX (`EO`, `CG`, `TS`, `EF`, `ET`); recurso vira `•`; DOCX sem emojis; texto CJK é rejeitado e reparado.
 - **Imagem em runtime:** Cloudflare FLUX, 5 por pacote, no slide de cada atividade; 512 px; fallback; sem Blob.
-- **Verificador semântico:** `gpt-4o-mini` com reparo; se não convergir, entrega com `avisos_qualidade`.
+- **Verificador semântico:** `gpt-4o` com reparo; se não convergir, entrega com `avisos_qualidade`.
 - Documentos `.docx` e `.pptx` editáveis; fluxo sem estado no servidor (plano JSON no navegador).
-- Consulta à BNCC em `/bncc`.
+- Consulta à BNCC em `/bncc` e ao Fund. I em `/bncc-ef`.
+- Geração do Fund. I em `/fund1`, com 574 habilidades, 7 códigos, 4 componentes
+  e 1 bloco de objetivos (`app/bncc_ef.py` + prompts `*_ef.md`).
+- Fontes abertas Poppins/Inter e tokens de design compartilhados.
+- Atribuição determinística de código/tipo/objetivo nas 5 atividades; 5 tipos e
+  5 códigos diferentes.
+- Gate de qualidade `scripts/validar_pacote.py`; amostras reais de EI e Fund. I
+  com 24/24 verificações e ~95% de correspondência estrutural.
+- Nota de cobertura do PPTX é opcional (desligada por padrão), como no modelo.
 - Questionário do cliente em `docs/questionario_cliente.md`.
 
 ## Fora do repositório (proposital)
@@ -81,13 +91,19 @@ LLM_API_KEY=...
 - O mock é estrutural; só o OpenAI real mede qualidade pedagógica.
 - Os modelos do cliente são por tema; o fluxo por código é uma decisão de produto.
 - O `.pptx` ainda usa emojis decorativos na capa e nos ícones; a imagem de atividade é gerada.
-- Sem histórico no web/Vercel; sem PDF; sem Fund I.
+- Sem histórico no web/Vercel; sem PDF.
+- O Fund. I usa LLM real, mas não há modelo visual de Fund. I da escola.
+- O modelo tem 22 imagens no PPTX; a geração usa 5 imagens + ícones/emojis.
+- O contrato do Fund. I é uma adaptação: 4 componentes, 1 ano, 7 objetivos e
+  avaliação Inicial/Esperado.
 - A biblioteca estática de PNG/SVG e o verificador semântico são as próximas trilhas.
 
 ## Primeiro passo da próxima sessão
 
 1. Ler `docs/estado_atual.md`, `docs/decisoes.md` e `docs/questionario_cliente.md`.
 2. Conferir `git status` e os commits.
-3. Rodar `python3 -m pytest -q`.
+3. Rodar `python3 -m pytest -q` (52 testes).
 4. Confirmar o provedor no selo da home.
-5. Decidir a fonte/estilo da biblioteca de imagens e se o Cloudflare entra em paralelo.
+5. Rodar um lote maior de EI + Fund. I com LLM real.
+6. Ampliar a biblioteca de ilustrações (5 vs 22 imagens do modelo).
+7. Validar o contrato do Fund. I com a professora.

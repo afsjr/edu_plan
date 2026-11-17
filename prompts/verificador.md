@@ -8,10 +8,12 @@ alinhamento, coerência e adequação.
 
 Para cada atividade:
 
-1. **Alinhamento com o objetivo**: a atividade realmente exercita o
-   `objetivo_relacionado`? Se o objetivo é do corpo, a atividade precisa
-   envolver movimento, gesto, coordenação motora, caminho ou recorte — não
-   ligar palavras.
+1. **Alinhamento com o objetivo e com a habilidade oficial**: a atividade
+   realmente exercita o `objetivo_relacionado` e a descrição oficial do
+   `codigo_bncc`? Se o objetivo é do corpo, a atividade precisa envolver
+   movimento, gesto, coordenação motora, caminho ou recorte — não ligar
+   palavras. Se a habilidade fala em escrever/ler, a atividade precisa
+   escrever/ler; desenhar sozinho não basta.
 2. **Compatibilidade com o campo da BNCC**:
    - `EO` (O eu, o outro e o nós): identidade, sentimentos, relações; desenhar,
      recortar, labirinto. Objetivo de independência/confiança não é exercitado
@@ -33,6 +35,14 @@ Para cada atividade:
 
 # Regras
 
+- Se a habilidade fala em **comunicar/apresentar**, desenhar e depois contar
+  para a turma é uma atividade alinhada.
+- Se a habilidade fala em **dança/movimento**, desenhar a sequência de
+  movimentos ou montar a sequência com recorte é válido, desde que o enunciado
+  peça para experimentar o movimento antes/depois; `labirinto` só vale para
+  caminho/coordenação.
+- O enunciado deve combinar com o tipo: “Recorte e cole” para
+  `recortar_colar`, “Desenhe” para `desenhar`, “Ligue” para `ligar` etc.
 - Não invente problemas. Se estiver adequado, `ok=true` e `problemas=[]`.
 - Se houver problema, aponte o número da atividade e um motivo curto, em
   português, com a correção sugerida.

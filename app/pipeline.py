@@ -13,8 +13,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app import image as image_service
+from app.atividades import montar_atribuicoes
 from app import storage
 from app.bncc import BaseBNCC
+from app.bncc_ef import BaseBNCCEF
 from app.config import carregar_env
 from app.contract import (
     SCHEMA_CADERNO,
@@ -37,6 +39,10 @@ carregar_env()
 logger = logging.getLogger("plano_aula.pipeline")
 
 
+def _base_para(codigo: str):
+    return BaseBNCCEF() if codigo.strip().upper().startswith("EF") else BaseBNCC()
+
+
 def _schemas() -> tuple[dict, dict]:
     if not SCHEMA_PLANO.exists() or not SCHEMA_CADERNO.exists():
         exportar_schemas()
@@ -51,7 +57,7 @@ def gerar_plano(
     cliente: LLMClient | None = None,
     base: BaseBNCC | None = None,
 ) -> PlanoAula:
-    base = base or BaseBNCC()
+    base = base or _base_para(requisicao.codigo_ancora)
     cliente = cliente or obter_cliente()
 
     candidatos = base.selecionar_codigos(
@@ -69,6 +75,7 @@ def gerar_plano(
     permitidos = {habilidade.codigo for habilidade in candidatos}
     feedback: list[str] = []
     ultimo_erro: Exception | None = None
+    ultimo_gerado = None
 
     for _ in range(3):
         try:
@@ -78,10 +85,30 @@ def gerar_plano(
                 schema_plano,
                 feedback=feedback,
             )
-            return resolver_plano(gerado, base, permitidos, requisicao.codigo_ancora)
+            ultimo_gerado = gerado
+            return resolver_plano(
+                gerado,
+                base,
+                permitidos,
+                requisicao.codigo_ancora,
+                exigir_cobertura=True,
+            )
         except (ErroContrato, ErroLLM, ValueError) as erro:
             ultimo_erro = erro
             feedback.append(str(erro))
+
+    if ultimo_gerado is not None:
+        logger.warning(
+            "Plano entregue com objetivos oficiais completados após 3 tentativas: %s",
+            ultimo_erro,
+        )
+        return resolver_plano(
+            ultimo_gerado,
+            base,
+            permitidos,
+            requisicao.codigo_ancora,
+            completar_objetivos=True,
+        )
 
     raise ErroContrato(
         f"Não foi possível gerar um plano válido após 3 tentativas: {ultimo_erro}"
@@ -92,8 +119,9 @@ def gerar_atividades(
     plano: PlanoAula,
     cliente: LLMClient | None = None,
 ) -> CadernoAtividades:
-    base = BaseBNCC()
+    base = _base_para(plano.identificacao.codigo_ancora)
     cliente = cliente or obter_cliente()
+    atribuicoes = montar_atribuicoes(plano)
     _, schema_caderno = _schemas()
     feedback: list[str] = []
     ultimo_erro: Exception | None = None
@@ -106,7 +134,32 @@ def gerar_atividades(
                 plano,
                 schema_caderno,
                 feedback=feedback,
+                atribuicoes=atribuicoes,
             )
+            if atribuicoes:
+                atividades = sorted(gerado.atividades, key=lambda item: item.numero)
+                if len(atividades) != len(atribuicoes):
+                    raise ErroContrato(
+                        f"O caderno deve ter {len(atribuicoes)} atividades; "
+                        f"vieram {len(atividades)}."
+                    )
+                corrigidas = []
+                for item, atribuicao in zip(atividades, atribuicoes):
+                    if (
+                        item.codigo_bncc != atribuicao["codigo"]
+                        or item.tipo != atribuicao["tipo"]
+                    ):
+                        raise ErroContrato(
+                            f"A atividade {item.numero} deve ser "
+                            f"{atribuicao['codigo']} / {atribuicao['tipo']}; "
+                            f"veio {item.codigo_bncc} / {item.tipo}."
+                        )
+                    corrigidas.append(
+                        item.model_copy(
+                            update={"objetivo_indice": atribuicao["objetivo_indice"]}
+                        )
+                    )
+                gerado = gerado.model_copy(update={"atividades": corrigidas})
             caderno = resolver_caderno(gerado, plano, base)
             ultimo_caderno = caderno
             try:

@@ -31,6 +31,40 @@ Você recebe:
 O plano deve usar **os 7 códigos candidatos** e cobrir **4 campos de
 experiência**.
 
+# Modelo de referência da instituição
+
+O material será comparado aos modelos da instituição. Busque o mesmo nível de
+detalhe e a mesma organização:
+
+1. Identificação
+2. Campos de experiência
+3. Objetivos de aprendizagem
+4. Habilidades da BNCC
+5. Recursos e materiais
+6. Desenvolvimento da aula
+7. Brincadeira & atividade para casa
+8. Avaliação
+9. Adaptações e acessibilidade
+10. Observações do(a) professor(a)
+
+Regras de qualidade:
+
+- Use **7 códigos**, **4 campos**, **6 a 8 recursos**, **7 momentos**,
+  **4 indicadores** e **4 adaptações**.
+- Cada objetivo deve retomar o **verbo e o objeto** de uma das 7 habilidades
+  oficiais. Não escreva objetivos genéricos como “participar das atividades”.
+- Distribua os 8 objetivos assim: **Pré I** cobre os códigos 1, 2, 3 e 4;
+  **Pré II** cobre os códigos 5, 6, 7 e repete o código 1 com mais
+  profundidade. Assim, todo código tem um objetivo e as atividades podem
+  apontar o índice correto (1 a 8).
+- Cada justificativa de campo deve explicar, em 1 ou 2 frases, por que aquele
+  campo entra **neste tema**.
+- Cada momento do desenvolvimento deve dizer o que o professor faz e o que a
+  criança faz, com material e tempo. Evite descrições vazias.
+- A avaliação deve ter critérios observáveis e diferenciar Pré I e Pré II.
+- A brincadeira para casa precisa ser aplicável pela família, sem material
+  caro.
+
 # Estrutura do plano
 
 Responda somente com JSON válido no schema `schema_plano.json`.
@@ -67,4 +101,6 @@ Responda somente com JSON válido no schema `schema_plano.json`.
 # Formato
 
 Devolva um único objeto JSON que valide contra `schema_plano.json`. Sem texto
-fora do JSON, sem comentários, sem vírgula final.
+fora do JSON, sem comentários, sem vírgula final. **Todos os campos do schema
+são obrigatórios**; não omita `avaliacao`, `adaptacoes`, `brincadeira_casa`,
+`dica` nem `observacoes_professor`.

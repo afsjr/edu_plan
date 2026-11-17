@@ -107,12 +107,13 @@ def test_objetivo_indice_vence_texto(base, permitidos):
     )
 
 
-def test_prompt_atividades_sem_descricao_bncc(base, permitidos):
+def test_prompt_atividades_inclui_descricao_para_alinhamento(base, permitidos):
     from app.llm import _prompt_atividades
 
     pacote = resolver_pacote(pacote_exemplo(), base, permitidos)
     prompt = _prompt_atividades(pacote.plano)
-    assert pacote.plano.habilidades[0].descricao not in prompt
+    assert pacote.plano.habilidades[0].descricao in prompt
+    assert "descricao_oficial" in prompt
     assert pacote.plano.objetivos[0].itens[0] in prompt
     assert "objetivo_indice" in prompt
 

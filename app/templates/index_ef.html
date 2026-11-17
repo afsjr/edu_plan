@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block titulo %}Gerar plano • Ensino Fundamental I{% endblock %}
+
+{% block conteudo %}
+<section class="hero">
+  <p class="olho">Ferramenta interna</p>
+  <h1>Plano de aula a partir da BNCC do Fundamental I</h1>
+  <p class="sub">
+    Escolha o ano e um código âncora. O sistema seleciona mais 6 códigos da
+    base, monta o plano com a mesma estrutura de 10 seções e só libera as
+    atividades depois da validação.
+  </p>
+</section>
+
+{% if erro %}
+<div class="alerta">{{ erro }}</div>
+{% endif %}
+
+<div class="grade duas">
+  <section class="cartao">
+    <div class="cartao-topo">
+      <h2>Novo plano — Fund. I</h2>
+      <span class="selo">{{ provedor }}</span>
+    </div>
+
+    <form method="post" action="/gerar-plano-fund1" class="formulario">
+      <label>
+        Ano
+        <select name="ano" required>
+          {% for ano in anos %}
+          <option value="{{ ano }}" {% if ano == ano_padrao %}selected{% endif %}>{{ ano }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        Código BNCC (âncora)
+        <select name="codigo" required>
+          <option value="">Selecione um código da base</option>
+          {% for sigla, nome in componentes.items() %}
+          <optgroup label="{{ nome }}">
+            {% for habilidade in codigos_por_componente[sigla] %}
+            <option value="{{ habilidade.codigo }}" {% if habilidade.codigo == codigo_padrao %}selected{% endif %}>
+              {{ habilidade.codigo }} — {{ habilidade.ano }} — {{ habilidade.habilidade[:90] }}
+            </option>
+            {% endfor %}
+          </optgroup>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        Observações para a geração <span class="opcional">(opcional)</span>
+        <textarea name="observacoes" rows="3" maxlength="500"
+          placeholder="Ex.: turma com níveis diferentes de leitura, usar material simples...">{{ observacoes_padrao }}</textarea>
+      </label>
+
+      <button type="submit" class="botao">Gerar plano</button>
+    </form>
+
+    <p class="nota">
+      O ano precisa ser compatível com o código. Arte (<strong>EF15AR</strong>)
+      vale do 1º ao 5º ano; Educação Física usa <strong>EF12EF</strong> (1º e
+      2º) e <strong>EF35EF</strong> (3º ao 5º).
+    </p>
+  </section>
+
+  <aside class="cartao">
+    <h2>Como funciona</h2>
+    <ol class="passos">
+      <li>O professor escolhe o ano e o código âncora.</li>
+      <li>O sistema busca 6 códigos relacionados: mesmo componente primeiro.</li>
+      <li>O plano mantém as 10 seções e cobre até 4 componentes.</li>
+      <li>O professor baixa o <strong>.docx</strong> e valida o plano.</li>
+      <li>Só depois da validação as 5 atividades são geradas.</li>
+      <li>O <strong>.pptx</strong> termina com a nota de cobertura do plano.</li>
+    </ol>
+
+    <div class="aviso-leve">
+      Base atual: <strong>574 habilidades</strong> do 1º ao 5º ano.
+      <a href="/bncc-ef">Consultar a base</a>.
+    </div>
+  </aside>
+</div>
+{% endblock %}

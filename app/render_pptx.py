@@ -19,21 +19,22 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Cm, Pt
 
 from app.contract import Atividade, CadernoAtividades, ConteudoAtividade, ItemLegendaCor
+from app.design import CORES, FONTE_TEXTO, FONTE_TITULO, TIPOGRAFIA
 
-VERDE = "4CAF73"
-LARANJA = "F2683C"
-AZUL = "2D9CDB"
-ROXO = "9B6DD6"
-ROSA = "F45B9C"
-AMARELO = "FDC22D"
-AZUL_ESCURO = "1B6CA8"
-CINZA_CLARO = "F4F5F8"
-CINZA_TEXTO = "6E6E80"
-CINZA_ESCURO = "2E2E3A"
-CINZA_LINHA = "C9C9D2"
-BRANCO = "FFFFFF"
+VERDE = CORES["verde"]
+LARANJA = CORES["laranja"]
+AZUL = CORES["azul"]
+ROXO = CORES["roxo"]
+ROSA = CORES["rosa"]
+AMARELO = CORES["amarelo"]
+AZUL_ESCURO = CORES["azul_escuro"]
+CINZA_CLARO = CORES["cinza_claro"]
+CINZA_TEXTO = CORES["cinza_texto"]
+CINZA_ESCURO = CORES["cinza_escuro"]
+CINZA_LINHA = CORES["cinza_linha"]
+BRANCO = CORES["branco"]
 
-FONTE = "Arial"
+FONTE = FONTE_TEXTO
 
 LARGURA = 21.01
 ALTURA = 29.69
@@ -62,6 +63,7 @@ def _texto(
     ancoragem=MSO_ANCHOR.TOP,
     espacamento: float = 1.05,
     italico: bool = False,
+    fonte: str = FONTE,
 ):
     caixa = slide.shapes.add_textbox(Cm(x), Cm(y), Cm(largura), Cm(altura))
     quadro = caixa.text_frame
@@ -79,7 +81,7 @@ def _texto(
         paragrafo.line_spacing = espacamento
         executar = paragrafo.add_run()
         executar.text = linha
-        executar.font.name = FONTE
+        executar.font.name = fonte
         executar.font.size = Pt(tamanho)
         executar.font.bold = negrito
         executar.font.italic = italico
@@ -128,6 +130,7 @@ def _texto_na_forma(
     alinhamento=PP_ALIGN.CENTER,
     ancoragem=MSO_ANCHOR.MIDDLE,
     margem: float = 0.12,
+    fonte: str = FONTE,
 ):
     quadro = shape.text_frame
     quadro.word_wrap = True
@@ -143,7 +146,7 @@ def _texto_na_forma(
         paragrafo.alignment = alinhamento
         executar = paragrafo.add_run()
         executar.text = linha
-        executar.font.name = FONTE
+        executar.font.name = fonte
         executar.font.size = Pt(tamanho)
         executar.font.bold = negrito
         executar.font.color.rgb = _rgb(cor)
@@ -182,7 +185,7 @@ def _rodape(slide, caderno: CadernoAtividades, numero: int) -> None:
         CONTEUDO - 3.0,
         1.0,
         f"Atividade {numero}  •  {caderno.capa.titulo}  •  {caderno.capa.etapa}",
-        tamanho=8,
+        tamanho=TIPOGRAFIA["pptx"]["rodape_pt"],
         cor=CINZA_TEXTO,
     )
     _texto(
@@ -192,7 +195,7 @@ def _rodape(slide, caderno: CadernoAtividades, numero: int) -> None:
         2.5,
         1.0,
         f"{numero + 1}",
-        tamanho=8,
+        tamanho=TIPOGRAFIA["pptx"]["rodape_pt"],
         cor=CINZA_TEXTO,
         alinhamento=PP_ALIGN.RIGHT,
     )
@@ -208,7 +211,7 @@ def _cabecalho_atividade(slide, atividade: Atividade, cor: str) -> None:
         1.55,
         1.55,
         str(atividade.numero),
-        tamanho=20,
+        tamanho=22,
         negrito=True,
         cor=cor,
         alinhamento=PP_ALIGN.CENTER,
@@ -221,10 +224,11 @@ def _cabecalho_atividade(slide, atividade: Atividade, cor: str) -> None:
         8.8,
         1.8,
         atividade.titulo,
-        tamanho=18,
+        tamanho=TIPOGRAFIA["pptx"]["atividade_titulo_pt"],
         negrito=True,
         cor=BRANCO,
         ancoragem=MSO_ANCHOR.MIDDLE,
+        fonte=FONTE_TITULO,
     )
 
     selo = _forma(slide, LARGURA - MARGEM - 6.0, 0.72, 6.0, 1.5, preenchimento=BRANCO, arredondado=True)
@@ -243,7 +247,7 @@ def _cabecalho_atividade(slide, atividade: Atividade, cor: str) -> None:
         largura_texto,
         1.15,
         atividade.enunciado,
-        tamanho=10 if tem_imagem else 11,
+        tamanho=11 if tem_imagem else TIPOGRAFIA["pptx"]["corpo_pt"],
         cor=CINZA_ESCURO,
         ancoragem=MSO_ANCHOR.MIDDLE,
     )
@@ -515,12 +519,45 @@ def _capa(prs: Presentation, caderno: CadernoAtividades) -> None:
     _circulo(slide, LARGURA - 5.4, -2.4, 6.0, "4FA8DE")
     _circulo(slide, LARGURA - 3.2, 5.0, 2.4, LARANJA)
     _circulo(slide, LARGURA - 2.6, 7.9, 1.3, AMARELO)
+    _circulo(slide, LARGURA - 8.0, 8.0, 1.7, VERDE)
+    _circulo(slide, LARGURA - 1.6, 3.0, 1.5, ROSA)
 
-    _texto(slide, MARGEM, 1.5, CONTEUDO, 1.0, "CADERNO DE ATIVIDADES", tamanho=11, negrito=True, cor=BRANCO)
+    _texto(slide, MARGEM, 1.5, CONTEUDO, 1.0, "CADERNO DE ATIVIDADES", tamanho=12, negrito=True, cor=BRANCO, fonte=FONTE_TITULO)
     titulo = caderno.capa.titulo
-    tamanho_titulo = 28 if len(titulo) <= 45 else 24 if len(titulo) <= 75 else 20
-    _texto(slide, MARGEM, 2.8, CONTEUDO - 2.0, 4.2, titulo, tamanho=tamanho_titulo, negrito=True, cor=BRANCO)
-    _texto(slide, MARGEM, 7.0, CONTEUDO - 2.0, 1.2, caderno.capa.subtitulo, tamanho=13, cor=BRANCO)
+    tamanho_titulo = 40 if len(titulo) <= 45 else 32 if len(titulo) <= 75 else 26
+
+    imagem_capa = None
+    for atividade in caderno.atividades:
+        if atividade.imagem_base64:
+            imagem_capa = atividade.imagem_base64
+            break
+
+    largura_titulo = CONTEUDO - 2.0
+    if imagem_capa:
+        largura_titulo = 9.4
+        _forma(
+            slide,
+            LARGURA - MARGEM - 7.0,
+            2.3,
+            7.0,
+            7.4,
+            preenchimento=BRANCO,
+            arredondado=True,
+        )
+        try:
+            dados = base64.b64decode(imagem_capa)
+            slide.shapes.add_picture(
+                io.BytesIO(dados),
+                Cm(LARGURA - MARGEM - 6.75),
+                Cm(2.55),
+                width=Cm(6.5),
+                height=Cm(6.5),
+            )
+        except Exception:
+            imagem_capa = None
+
+    _texto(slide, MARGEM, 2.8, largura_titulo, 4.2, titulo, tamanho=tamanho_titulo, negrito=True, cor=BRANCO, fonte=FONTE_TITULO)
+    _texto(slide, MARGEM, 7.0, largura_titulo, 1.2, caderno.capa.subtitulo, tamanho=TIPOGRAFIA["pptx"]["capa_subtitulo_pt"], cor=BRANCO)
 
     _forma(slide, MARGEM, 11.0, CONTEUDO, 2.0, preenchimento=CINZA_CLARO, arredondado=True)
     _texto(slide, MARGEM + 0.4, 11.25, CONTEUDO - 0.8, 1.5, f"{caderno.capa.etapa}  •  {caderno.capa.faixa_etaria}  •  {caderno.capa.codigo_ancora}", tamanho=12, negrito=True, cor=CINZA_ESCURO)
@@ -544,7 +581,7 @@ def _capa(prs: Presentation, caderno: CadernoAtividades) -> None:
 def _slide_nota(prs: Presentation, caderno: CadernoAtividades) -> None:
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     _forma(slide, 0, 0, LARGURA, 2.9, preenchimento=CINZA_ESCURO, arredondado=False, forma=MSO_SHAPE.RECTANGLE)
-    _texto(slide, MARGEM, 0.7, CONTEUDO, 1.8, "Nota para o professor", tamanho=20, negrito=True, cor=BRANCO, ancoragem=MSO_ANCHOR.MIDDLE)
+    _texto(slide, MARGEM, 0.7, CONTEUDO, 1.8, "Nota para o professor", tamanho=22, negrito=True, cor=BRANCO, ancoragem=MSO_ANCHOR.MIDDLE, fonte=FONTE_TITULO)
     _texto(slide, MARGEM, 3.4, CONTEUDO, 1.0, "Cobertura do plano", tamanho=14, negrito=True, cor=AZUL_ESCURO)
 
     nota = caderno.nota_cobertura
@@ -576,7 +613,11 @@ def _slide_nota(prs: Presentation, caderno: CadernoAtividades) -> None:
     _texto(slide, LARGURA - MARGEM - 2.5, 28.0, 2.5, 1.0, str(len(caderno.atividades) + 2), tamanho=8, cor=CINZA_TEXTO, alinhamento=PP_ALIGN.RIGHT)
 
 
-def render_caderno(caderno: CadernoAtividades, destino: Path) -> Path:
+def render_caderno(
+    caderno: CadernoAtividades,
+    destino: Path,
+    incluir_nota: bool = False,
+) -> Path:
     prs = Presentation()
     prs.slide_width = Cm(LARGURA)
     prs.slide_height = Cm(ALTURA)
@@ -591,7 +632,8 @@ def render_caderno(caderno: CadernoAtividades, destino: Path) -> Path:
         renderizador(slide, atividade.conteudo, cor)
         _rodape(slide, caderno, atividade.numero)
 
-    _slide_nota(prs, caderno)
+    if incluir_nota:
+        _slide_nota(prs, caderno)
 
     destino = Path(destino)
     destino.parent.mkdir(parents=True, exist_ok=True)
